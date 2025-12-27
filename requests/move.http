@@ -1,0 +1,9 @@
+POST https://api.artifactsmmo.com/my/{{CHARACTER_NAME}}/action/move
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{API_TOKEN}}
+
+{
+  "x": 0,
+  "y": 1
+}

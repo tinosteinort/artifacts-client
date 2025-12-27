@@ -1,0 +1,4 @@
+POST https://api.artifactsmmo.com/my/{{CHARACTER_NAME}}/action/fight
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{API_TOKEN}}
