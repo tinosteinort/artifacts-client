@@ -1,5 +1,6 @@
 package artifacts.business
 
+import artifacts.business.action.MoveResult
 import artifacts.business.common.Loggers
 import artifacts.business.util.Outcome
 

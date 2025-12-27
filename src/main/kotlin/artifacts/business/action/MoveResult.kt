@@ -1,4 +1,4 @@
-package artifacts.business
+package artifacts.business.action
 
 sealed class MoveResult {
 

@@ -1,14 +1,15 @@
 package artifacts.adapter
 
 import artifacts.business.Game
+import artifacts.business.action.FightResult
 import artifacts.business.common.GameError
-import artifacts.business.MoveResult
-import artifacts.business.common.Loggers
+import artifacts.business.action.MoveResult
 import artifacts.business.common.Position
 import artifacts.business.util.Outcome
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
+import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 
 class ArtifactsGame(
@@ -46,6 +47,21 @@ class ArtifactsGame(
             499 -> return Outcome.success(MoveResult.CharacterIsInCooldown())
             595 -> return Outcome.error(GameError.NoPathAvailable())
             596 -> return Outcome.success(MoveResult.MapIsBlocked())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    override fun fight(character: String): Outcome<FightResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/fight"))
+            .configureHeaders()
+            .POST(BodyPublishers.noBody())
+            .build()
+
+        val response = httpClient.send(request, BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> return Outcome.success(FightResult.FightEndedSuccessfully())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
