@@ -42,16 +42,16 @@ class ArtifactsGame(
         val response = httpClient.send(request, BodyHandlers.ofString())
 
         return when (response.statusCode()) {
-            200 -> return Outcome.success(MoveResult.Success())
-            404 -> return Outcome.error(GameError.MapNotFound())
-            422 -> return Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            486 -> return Outcome.success(MoveResult.CharacterIsBusy())
-            490 -> return Outcome.success(MoveResult.AlreadyThere())
-            496 -> return Outcome.success(MoveResult.ConditionsNotMet())
-            498 -> return Outcome.error(GameError.CharacterNotFound())
-            499 -> return Outcome.success(MoveResult.CharacterIsInCooldown())
-            595 -> return Outcome.error(GameError.NoPathAvailable())
-            596 -> return Outcome.success(MoveResult.MapIsBlocked())
+            200 -> Outcome.success(MoveResult.Success())
+            404 -> Outcome.error(GameError.MapNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(MoveResult.CharacterIsBusy())
+            490 -> Outcome.success(MoveResult.AlreadyThere())
+            496 -> Outcome.success(MoveResult.ConditionsNotMet())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(MoveResult.CharacterIsInCooldown())
+            595 -> Outcome.error(GameError.NoPathAvailable())
+            596 -> Outcome.success(MoveResult.MapIsBlocked())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
@@ -69,14 +69,14 @@ class ArtifactsGame(
             200 -> {
                 // https://api.artifactsmmo.com/docs/#/operations/action_fight_my__name__action_fight_post
 
-                return Outcome.success(FightResult.FightEnded())
+                Outcome.success(FightResult.FightEnded())
             }
-            422 -> return Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            486 -> return Outcome.success(FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters())
-            497 -> return Outcome.success(FightResult.InventoryFull())
-            498 -> return Outcome.error(GameError.CharacterNotFound())
-            499 -> return Outcome.success(FightResult.CharacterIsInCooldown())
-            598 -> return Outcome.success(FightResult.NoMonsterOnMap())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters())
+            497 -> Outcome.success(FightResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(FightResult.CharacterIsInCooldown())
+            598 -> Outcome.success(FightResult.NoMonsterOnMap())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
