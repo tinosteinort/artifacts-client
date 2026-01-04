@@ -6,6 +6,7 @@ import artifacts.business.common.GameError
 import artifacts.business.action.MoveResult
 import artifacts.business.common.Position
 import artifacts.business.util.Outcome
+import kotlinx.serialization.json.Json
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -18,7 +19,9 @@ class ArtifactsGame(
     private val authToken: String
 ) : Game {
 
-   // private val mapper = jacksonObjectMapper()
+   private val json = Json {
+       ignoreUnknownKeys = true
+   }
 
     override fun move(character: String, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest

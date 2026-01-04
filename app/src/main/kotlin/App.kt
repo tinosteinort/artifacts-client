@@ -2,6 +2,7 @@ import artifacts.adapter.ArtifactsGame
 import artifacts.business.Figure
 import artifacts.business.Game
 import artifacts.business.Places
+import artifacts.business.action.FightAction
 import artifacts.business.action.MoveAction
 import java.net.http.HttpClient
 

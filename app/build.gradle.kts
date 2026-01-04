@@ -8,6 +8,7 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     alias(libs.plugins.kotlin.jvm)
+    kotlin("plugin.serialization") version "2.3.0"
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -25,7 +26,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // This dependency is used by the application.
-    implementation(libs.guava)
+    implementation(libs.kotlinx.serialization.json)
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
