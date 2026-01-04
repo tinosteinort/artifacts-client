@@ -61,7 +61,16 @@ class ArtifactsGame(
         val response = httpClient.send(request, BodyHandlers.ofString())
 
         return when (response.statusCode()) {
-            200 -> return Outcome.success(FightResult.FightEndedSuccessfully())
+            200 -> {
+
+                return Outcome.success(FightResult.FightEnded())
+            }
+            422 -> return Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> return Outcome.success(FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters())
+            497 -> return Outcome.success(FightResult.InventoryFull())
+            498 -> return Outcome.error(GameError.CharacterNotFound())
+            499 -> return Outcome.success(FightResult.CharacterIsInCooldown())
+            598 -> return Outcome.success(FightResult.NoMonsterOnMap())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }

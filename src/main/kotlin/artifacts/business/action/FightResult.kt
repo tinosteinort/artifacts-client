@@ -2,7 +2,7 @@ package artifacts.business.action
 
 sealed class FightResult {
 
-    class FightEndedSuccessfully : FightResult()
+    class FightEnded : FightResult()
     class OnlyBossMonsterCanBeFoughtByMultipleCharacters : FightResult()
     class InventoryFull : FightResult()
     class CharacterIsInCooldown : FightResult()
