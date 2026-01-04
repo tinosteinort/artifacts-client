@@ -1,9 +1,8 @@
 import artifacts.adapter.ArtifactsGame
 import artifacts.business.Figure
+import artifacts.business.FigureAutoController
 import artifacts.business.Game
-import artifacts.business.Places
 import artifacts.business.action.FightAction
-import artifacts.business.action.MoveAction
 import java.net.http.HttpClient
 
 class App
@@ -18,6 +17,7 @@ fun main() {
     )
 
     val henk = Figure(game, "Henk")
+    val henkController = FigureAutoController(henk, true)
 
     henk.setActions(
         listOf(
@@ -28,6 +28,7 @@ fun main() {
 
     while (true) {
         henk.executeAction()
+        henkController.control()
         Thread.sleep(1000)
     }
 }
