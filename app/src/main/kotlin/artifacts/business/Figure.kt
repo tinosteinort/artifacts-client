@@ -29,9 +29,8 @@ class Figure(
         }
     }
 
-    private fun inCooldown(): Boolean {
-        return false // TODO
-    }
+    private fun inCooldown(): Boolean =
+        cooldown?.inCooldown() ?: false
 
     fun isBusy(): Boolean =
         currentAction != null

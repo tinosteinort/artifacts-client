@@ -1,9 +1,12 @@
 package artifacts.adapter
 
+import artifacts.adapter.dto.FightResponseDto
 import artifacts.business.Game
 import artifacts.business.action.FightResult
-import artifacts.business.common.GameError
 import artifacts.business.action.MoveResult
+import artifacts.business.common.Cooldown
+import artifacts.business.common.GameError
+import artifacts.business.common.Loggers
 import artifacts.business.common.Position
 import artifacts.business.util.Outcome
 import kotlinx.serialization.json.Json
@@ -19,9 +22,9 @@ class ArtifactsGame(
     private val authToken: String
 ) : Game {
 
-   private val json = Json {
-       ignoreUnknownKeys = true
-   }
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
 
     override fun move(character: String, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest
@@ -67,10 +70,19 @@ class ArtifactsGame(
 
         return when (response.statusCode()) {
             200 -> {
-                // https://api.artifactsmmo.com/docs/#/operations/action_fight_my__name__action_fight_post
+                val fightData = json.decodeFromString<FightResponseDto>(response.body())
 
-                Outcome.success(FightResult.FightEnded())
+                Outcome.success(
+                    FightResult.FightEnded(
+                        win = fightData.data.fight.result == "win",
+                        opponent = fightData.data.fight.opponent,
+                        cooldown = Cooldown.forSeconds(
+                            fightData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
             }
+
             422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
             486 -> Outcome.success(FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters())
             497 -> Outcome.success(FightResult.InventoryFull())
@@ -86,5 +98,10 @@ class ArtifactsGame(
         this.header("Accept", "application/json")
         this.header("Content-Type", "application/json")
         return this
+    }
+
+    companion object {
+
+        private val logger = Loggers.getLogger(ArtifactsGame::class.java)
     }
 }

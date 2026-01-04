@@ -13,7 +13,12 @@ class FightAction : Action {
             is Outcome.Error -> logger.error("${result.value::class.java}")
             is Outcome.Success -> when (result.value) {
                 is FightResult.FightEnded -> {
-                    logger.info("fight ended")
+                    if (result.value.win) {
+                        logger.info("$figureName won the fight against ${result.value.opponent}")
+                    } else {
+                        logger.info("$figureName lost the fight against ${result.value.opponent}")
+                    }
+                    return result.value.cooldown
                 }
 
                 is FightResult.CharacterIsInCooldown -> logger.info("$figureName is in cooldown")
@@ -24,7 +29,7 @@ class FightAction : Action {
             }
         }
 
-        return Cooldown()
+        return Cooldown.forSeconds(5)
     }
 
     companion object {

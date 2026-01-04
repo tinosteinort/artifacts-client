@@ -1,8 +1,14 @@
 package artifacts.business.action
 
+import artifacts.business.common.Cooldown
+
 sealed class FightResult {
 
-    class FightEnded : FightResult()
+    class FightEnded(
+        val win: Boolean,
+        val opponent: String,
+        val cooldown: Cooldown,
+    ) : FightResult()
     class OnlyBossMonsterCanBeFoughtByMultipleCharacters : FightResult()
     class InventoryFull : FightResult()
     class CharacterIsInCooldown : FightResult()

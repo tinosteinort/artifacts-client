@@ -25,7 +25,7 @@ class MoveAction(
             }
         }
 
-        return Cooldown()
+        return Cooldown.forSeconds(5)
     }
 
     companion object {

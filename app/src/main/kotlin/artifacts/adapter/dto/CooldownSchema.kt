@@ -1,11 +1,13 @@
 package artifacts.adapter.dto
 
-import java.time.LocalDateTime
+import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
+@Serializable
 data class CooldownSchema(
     val total_seconds: Int,
     val remaining_seconds: Int,
-    val started_at: LocalDateTime,
-    val expiration: LocalDateTime,
+    val started_at: Instant,
+    val expiration: Instant,
     val reason: String
 )

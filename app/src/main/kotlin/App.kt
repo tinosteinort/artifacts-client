@@ -21,13 +21,13 @@ fun main() {
 
     henk.setActions(
         listOf(
-            MoveAction { Places.CHICKEN },
-            //FightAction(),
+            //MoveAction { Places.CHICKEN },
+            FightAction(),
         )
     )
-    henk.executeAction()
 
-    //while (true) {
-    //    Thread.sleep(1000)
-    //}
+    while (true) {
+        henk.executeAction()
+        Thread.sleep(1000)
+    }
 }
