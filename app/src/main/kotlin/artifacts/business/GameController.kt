@@ -1,6 +1,7 @@
 package artifacts.business
 
 import artifacts.business.action.FightResult
+import artifacts.business.action.MoveResult
 import artifacts.business.common.Loggers
 import artifacts.business.util.Outcome
 
@@ -11,7 +12,7 @@ class GameController(
 
     fun run() {
 
-        //when (val result = game.move(character, Places.CHICKEN)) {
+        //when (val result = game.move(character, Places.COWS)) {
         //    is Outcome.Error -> logger.error("${result.javaClass}")
         //    is Outcome.Success -> when (result.value) {
         //        is MoveResult.AlreadyThere -> logger.info("$character is already there")
