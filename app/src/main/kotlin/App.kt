@@ -1,6 +1,8 @@
 import artifacts.adapter.ArtifactsGame
+import artifacts.business.Figure
 import artifacts.business.Game
-import artifacts.business.GameController
+import artifacts.business.Places
+import artifacts.business.action.MoveAction
 import java.net.http.HttpClient
 
 class App
@@ -14,5 +16,17 @@ fun main() {
         authToken = System.getenv("API_TOKEN")
     )
 
-    GameController(game, "Henk").run()
+    val henk = Figure(game, "Henk")
+
+    henk.setActions(
+        listOf(
+            MoveAction { Places.CHICKEN },
+            //FightAction(),
+        )
+    )
+    henk.executeAction()
+
+    //while (true) {
+    //    Thread.sleep(1000)
+    //}
 }
