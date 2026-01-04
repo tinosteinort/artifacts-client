@@ -16,12 +16,18 @@ class MoveAction(
         when (val result = game.move(figureName, place())) {
             is Outcome.Error -> logger.error("${result.javaClass}")
             is Outcome.Success -> when (result.value) {
-                is MoveResult.AlreadyThere -> logger.info("$figureName is already there")
+                is MoveResult.AlreadyThere -> {
+                    logger.info("$figureName is already there")
+                    return Cooldown.forSeconds(0)
+                }
                 is MoveResult.CharacterIsBusy -> logger.info("$figureName is busy")
                 is MoveResult.CharacterIsInCooldown -> logger.info("$figureName is in cooldown")
                 is MoveResult.ConditionsNotMet -> logger.info("$figureName does not match conditions")
                 is MoveResult.MapIsBlocked -> logger.info("map is blocked")
-                is MoveResult.Success -> logger.info("$figureName move done")
+                is MoveResult.Success -> {
+                    logger.info("$figureName move done")
+                    return result.value.cooldown
+                }
             }
         }
 

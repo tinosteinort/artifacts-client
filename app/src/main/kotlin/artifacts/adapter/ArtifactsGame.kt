@@ -1,6 +1,7 @@
 package artifacts.adapter
 
 import artifacts.adapter.dto.FightResponseDto
+import artifacts.adapter.dto.MoveResponseDto
 import artifacts.business.Game
 import artifacts.business.action.FightResult
 import artifacts.business.action.MoveResult
@@ -45,7 +46,17 @@ class ArtifactsGame(
         val response = httpClient.send(request, BodyHandlers.ofString())
 
         return when (response.statusCode()) {
-            200 -> Outcome.success(MoveResult.Success())
+            200 -> {
+                val moveData = json.decodeFromString<MoveResponseDto>(response.body())
+                Outcome.success(
+                    MoveResult.Success(
+                        cooldown = Cooldown.forSeconds(
+                            moveData.data.cooldown.remaining_seconds
+                        )
+                    )
+                )
+            }
+
             404 -> Outcome.error(GameError.MapNotFound())
             422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
             486 -> Outcome.success(MoveResult.CharacterIsBusy())

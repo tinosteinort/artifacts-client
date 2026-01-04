@@ -15,9 +15,9 @@ class FigureAutoController(
 
         figure.setActions(
             listOf(
-                //MoveAction {
-                //    Places.CHICKEN
-                //},
+                MoveAction {
+                    Places.CHICKEN
+                },
                 FightAction(),
             )
         )
