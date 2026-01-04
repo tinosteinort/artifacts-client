@@ -18,6 +18,8 @@ class ArtifactsGame(
     private val authToken: String
 ) : Game {
 
+   // private val mapper = jacksonObjectMapper()
+
     override fun move(character: String, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/${character}/action/move"))
@@ -62,6 +64,7 @@ class ArtifactsGame(
 
         return when (response.statusCode()) {
             200 -> {
+                // https://api.artifactsmmo.com/docs/#/operations/action_fight_my__name__action_fight_post
 
                 return Outcome.success(FightResult.FightEnded())
             }
