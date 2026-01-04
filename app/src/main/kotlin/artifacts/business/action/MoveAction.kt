@@ -3,7 +3,7 @@ package artifacts.business.action
 import artifacts.business.Action
 import artifacts.business.Game
 import artifacts.business.common.Cooldown
-import artifacts.business.common.Loggers
+import artifacts.business.util.Loggers
 import artifacts.business.common.Position
 import artifacts.business.util.Outcome
 

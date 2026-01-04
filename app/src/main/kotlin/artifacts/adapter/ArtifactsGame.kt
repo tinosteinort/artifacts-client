@@ -7,7 +7,7 @@ import artifacts.business.action.FightResult
 import artifacts.business.action.MoveResult
 import artifacts.business.common.Cooldown
 import artifacts.business.common.GameError
-import artifacts.business.common.Loggers
+import artifacts.business.util.Loggers
 import artifacts.business.common.Position
 import artifacts.business.util.Outcome
 import kotlinx.serialization.json.Json

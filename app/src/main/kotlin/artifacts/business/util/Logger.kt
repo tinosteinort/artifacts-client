@@ -1,4 +1,4 @@
-package artifacts.business.common
+package artifacts.business.util
 
 class Logger {
 
