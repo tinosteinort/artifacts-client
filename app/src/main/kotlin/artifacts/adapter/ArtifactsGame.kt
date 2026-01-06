@@ -2,13 +2,15 @@ package artifacts.adapter
 
 import artifacts.adapter.dto.FightResponseDto
 import artifacts.adapter.dto.MoveResponseDto
+import artifacts.adapter.dto.RestResponseDto
 import artifacts.business.Game
 import artifacts.business.action.FightResult
 import artifacts.business.action.MoveResult
+import artifacts.business.action.RestResult
 import artifacts.business.common.Cooldown
 import artifacts.business.common.GameError
-import artifacts.business.util.Loggers
 import artifacts.business.common.Position
+import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
 import kotlinx.serialization.json.Json
 import java.net.URI
@@ -100,6 +102,36 @@ class ArtifactsGame(
             498 -> Outcome.error(GameError.CharacterNotFound())
             499 -> Outcome.success(FightResult.CharacterIsInCooldown())
             598 -> Outcome.success(FightResult.NoMonsterOnMap())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    override fun rest(character: String): Outcome<RestResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/rest"))
+            .configureHeaders()
+            .POST(BodyPublishers.noBody())
+            .build()
+
+        val response = httpClient.send(request, BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val restData = json.decodeFromString<RestResponseDto>(response.body())
+
+                Outcome.success(
+                    RestResult.Success(
+                        cooldown = Cooldown.forSeconds(
+                            restData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
+            }
+
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(RestResult.CharacterIsBusy())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(RestResult.CharacterIsInCooldown())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }

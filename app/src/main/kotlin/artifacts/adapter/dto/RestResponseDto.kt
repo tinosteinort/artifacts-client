@@ -3,6 +3,6 @@ package artifacts.adapter.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class FightResponseDto(
-    val data: CharacterFightDataSchema
+data class RestResponseDto(
+    val data: CharacterRestDataSchema
 )

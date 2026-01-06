@@ -2,6 +2,7 @@ package artifacts.business
 
 import artifacts.business.action.FightAction
 import artifacts.business.action.MoveAction
+import artifacts.business.action.RestAction
 
 class FigureAutoController(
     val figure: Figure,
@@ -15,9 +16,11 @@ class FigureAutoController(
 
         figure.setActions(
             listOf(
+                RestAction(),
                 MoveAction {
                     Places.CHICKEN
                 },
+                FightAction(),
                 FightAction(),
             )
         )

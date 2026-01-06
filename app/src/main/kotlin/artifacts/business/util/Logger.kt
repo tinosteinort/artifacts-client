@@ -1,11 +1,11 @@
 package artifacts.business.util
 
-class Logger {
+class Logger(private val cls: Class<*>) {
 
     fun info(message: String) {
-        println("Info: ${message}")
+        println("Info[${cls.simpleName}]: $message")
     }
     fun error(message: String) {
-        println("Error: ${message}")
+        println("Error[${cls.simpleName}]: $message")
     }
 }
