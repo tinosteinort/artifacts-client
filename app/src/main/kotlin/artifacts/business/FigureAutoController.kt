@@ -1,8 +1,6 @@
 package artifacts.business
 
-import artifacts.business.action.FightAction
-import artifacts.business.action.MoveAction
-import artifacts.business.action.RestAction
+import artifacts.business.action.CraftAction
 
 class FigureAutoController(
     val figure: Figure,
@@ -15,13 +13,16 @@ class FigureAutoController(
         }
 
         figure.setActions(
+            //listOf(
+            //    RestAction(),
+            //    MoveAction {
+            //        Places.CHICKEN
+            //    },
+            //    FightAction(),
+            //    FightAction(),
+            //)
             listOf(
-                RestAction(),
-                MoveAction {
-                    Places.CHICKEN
-                },
-                FightAction(),
-                FightAction(),
+                CraftAction(Items.COOKED_CHICKEN, 1)
             )
         )
     }

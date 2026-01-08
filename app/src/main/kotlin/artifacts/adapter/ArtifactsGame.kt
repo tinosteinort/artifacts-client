@@ -1,14 +1,11 @@
 package artifacts.adapter
 
-import artifacts.adapter.dto.FightResponseDto
-import artifacts.adapter.dto.MoveResponseDto
-import artifacts.adapter.dto.RestResponseDto
+import artifacts.adapter.dto.*
 import artifacts.business.Game
-import artifacts.business.action.FightResult
-import artifacts.business.action.MoveResult
-import artifacts.business.action.RestResult
+import artifacts.business.action.*
 import artifacts.business.common.Cooldown
 import artifacts.business.common.GameError
+import artifacts.business.common.ItemDrop
 import artifacts.business.common.Position
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
@@ -102,6 +99,96 @@ class ArtifactsGame(
             498 -> Outcome.error(GameError.CharacterNotFound())
             499 -> Outcome.success(FightResult.CharacterIsInCooldown())
             598 -> Outcome.success(FightResult.NoMonsterOnMap())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    override fun gather(character: String): Outcome<GatherResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/gathering"))
+            .configureHeaders()
+            .POST(BodyPublishers.noBody())
+            .build()
+
+        val response = httpClient.send(request, BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val gatheringData = json.decodeFromString<GatherResponseDto>(response.body())
+
+                Outcome.success(
+                    GatherResult.Success(
+                        items = gatheringData.data.details.items
+                            .map {
+                                ItemDrop(
+                                    item = it.code,
+                                    quantity = it.quantity
+                                )
+                            },
+                        cooldown = Cooldown.forSeconds(
+                            gatheringData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
+            }
+
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(GatherResult.CharacterIsBusy())
+            493 -> Outcome.success(GatherResult.SkillLevelTooLow())
+            497 -> Outcome.success(GatherResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(GatherResult.CharacterIsInCooldown())
+            598 -> Outcome.success(GatherResult.NoResourceOnMap())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    override fun craft(character: String, item: String, quantity: Int): Outcome<CraftResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/crafting"))
+            .configureHeaders()
+            .POST(
+                HttpRequest.BodyPublishers.ofString(
+                    """
+                    {
+                      "code": "$item",
+                      "quantity": $quantity
+                    }    
+                    """.trimIndent()
+                )
+            )
+            .build()
+
+        val response = httpClient.send(request, BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val craftingData = json.decodeFromString<CraftingResponseDto>(response.body())
+
+                Outcome.success(
+                    CraftResult.Success(
+                        items = craftingData.data.details.items
+                            .map {
+                                ItemDrop(
+                                    item = it.code,
+                                    quantity = it.quantity
+                                )
+                            },
+                        cooldown = Cooldown.forSeconds(
+                            craftingData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
+            }
+
+            404 -> Outcome.success(CraftResult.CraftNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            478 -> Outcome.success(CraftResult.MissingRequiredItems())
+            486 -> Outcome.success(CraftResult.CharacterIsBusy())
+            493 -> Outcome.success(CraftResult.SkillLevelTooLow())
+            497 -> Outcome.success(CraftResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(CraftResult.CharacterIsInCooldown())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }

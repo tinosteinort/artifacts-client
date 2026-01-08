@@ -8,5 +8,7 @@ object Places {
     val CHICKEN = Position(0, 1)
     val COWS = Position(0, 2)
     val WORKSHOP_WEAPON_CRAFTING = Position(2, 1)
+    val WORKSHOP_GEAR_CRAFTING = Position(3, 1)
+    val WORKSHOP_COOKING = Position(1, 1)
     val SUNFLOWER_FIELD = Position(2, 2)
 }
