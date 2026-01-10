@@ -24,16 +24,14 @@ fun main() {
 
     henk.setActions(
         listOf(
-            MoveAction {
-                Places.WORKSHOP_GEAR_CRAFTING
-            },
-            CraftAction(Items.COOKED_CHICKEN, 3)
+            //MoveAction { Places.WORKSHOP_COOKING },
+            CraftAction(Items.COOKED_CHICKEN, 14)
         )
     )
 
     while (true) {
         henk.executeAction()
-        //henkController.control()
+        henkController.control()
         Thread.sleep(1000)
     }
 }

@@ -223,6 +223,50 @@ class ArtifactsGame(
         }
     }
 
+    override fun unequip(character: String, slot: String, quantity: Int): Outcome<UnequipResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/unequip"))
+            .configureHeaders()
+            .POST(
+                BodyPublishers.ofString(
+                    """
+                    {
+                      "slot": "$slot",
+                      "quantity": $quantity
+                    }    
+                    """.trimIndent()
+                )
+            )
+            .build()
+
+        val response = httpClient.send(request, BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val unequipData = json.decodeFromString<UnequipResponseDto>(response.body())
+
+                Outcome.success(
+                    UnequipResult.Success(
+                        cooldown = Cooldown.forSeconds(
+                            unequipData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
+            }
+
+            404 -> Outcome.success(UnequipResult.ItemNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            478 -> Outcome.success(UnequipResult.MissingRequiredItems())
+            483 -> Outcome.success(UnequipResult.NotEnoughHp())
+            486 -> Outcome.success(UnequipResult.CharacterIsBusy())
+            491 -> Outcome.success(UnequipResult.SlotNotEquipped())
+            497 -> Outcome.success(UnequipResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(UnequipResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
     private fun HttpRequest.Builder.configureHeaders(): HttpRequest.Builder {
         this.header("Authorization", "Bearer $authToken")
         this.header("Accept", "application/json")
