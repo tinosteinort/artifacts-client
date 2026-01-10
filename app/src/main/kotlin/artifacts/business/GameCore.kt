@@ -10,7 +10,7 @@ import artifacts.business.common.GameError
 import artifacts.business.common.Position
 import artifacts.business.util.Outcome
 
-interface Game {
+interface GameCore {
 
     fun move(character: String, position: Position): Outcome<MoveResult, GameError>
     fun fight(character: String): Outcome<FightResult, GameError>

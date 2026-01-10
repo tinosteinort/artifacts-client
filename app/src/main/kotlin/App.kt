@@ -1,11 +1,9 @@
-import artifacts.adapter.ArtifactsGame
+import artifacts.adapter.ArtifactsGameCore
 import artifacts.business.Figure
 import artifacts.business.FigureAutoController
-import artifacts.business.Game
+import artifacts.business.GameCore
 import artifacts.business.Items
-import artifacts.business.Places
 import artifacts.business.action.CraftAction
-import artifacts.business.action.MoveAction
 import java.net.http.HttpClient
 
 class App
@@ -13,13 +11,13 @@ class App
 fun main() {
 
     val httpClient = HttpClient.newHttpClient()
-    val game: Game = ArtifactsGame(
+    val core: GameCore = ArtifactsGameCore(
         httpClient = httpClient,
         artifactsApiUrl = "https://api.artifactsmmo.com",
         authToken = System.getenv("API_TOKEN")
     )
 
-    val henk = Figure(game, "Henk")
+    val henk = Figure(core, "Henk")
     val henkController = FigureAutoController(henk, true)
 
     henk.setActions(

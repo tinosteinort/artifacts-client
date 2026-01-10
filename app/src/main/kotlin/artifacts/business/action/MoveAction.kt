@@ -1,7 +1,7 @@
 package artifacts.business.action
 
 import artifacts.business.Action
-import artifacts.business.Game
+import artifacts.business.GameCore
 import artifacts.business.common.Cooldown
 import artifacts.business.util.Loggers
 import artifacts.business.common.Position
@@ -11,9 +11,9 @@ class MoveAction(
     private val place: () -> Position
 ) : Action {
 
-    override fun execute(game: Game, figureName: String): Cooldown {
+    override fun execute(core: GameCore, figureName: String): Cooldown {
 
-        when (val result = game.move(figureName, place())) {
+        when (val result = core.move(figureName, place())) {
             is Outcome.Error -> logger.error("${result.javaClass}")
             is Outcome.Success -> when (result.value) {
                 is MoveResult.AlreadyThere -> {

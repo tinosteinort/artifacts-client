@@ -4,5 +4,5 @@ import artifacts.business.common.Cooldown
 
 interface Action {
 
-    fun execute(game: Game, figureName: String) : Cooldown
+    fun execute(core: GameCore, figureName: String) : Cooldown
 }

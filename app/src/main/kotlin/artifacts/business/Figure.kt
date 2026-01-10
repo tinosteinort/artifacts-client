@@ -3,7 +3,7 @@ package artifacts.business
 import artifacts.business.common.Cooldown
 
 class Figure(
-    private val game: Game,
+    private val core: GameCore,
     private val figureName: String,
 ) {
 
@@ -20,7 +20,7 @@ class Figure(
 
         if (currentAction == null && actions.isNotEmpty()) {
             currentAction = actions.removeFirst()
-            cooldown = currentAction?.execute(game, figureName)
+            cooldown = currentAction?.execute(core, figureName)
         } else {
             if (!inCooldown()) {
                 currentAction = null

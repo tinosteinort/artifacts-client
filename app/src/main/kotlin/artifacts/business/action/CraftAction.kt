@@ -1,7 +1,7 @@
 package artifacts.business.action
 
 import artifacts.business.Action
-import artifacts.business.Game
+import artifacts.business.GameCore
 import artifacts.business.common.Cooldown
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
@@ -11,8 +11,8 @@ class CraftAction(
     val quantity: Int,
 ) : Action {
 
-    override fun execute(game: Game, figureName: String): Cooldown {
-        when (val result = game.craft(figureName, item, quantity)) {
+    override fun execute(core: GameCore, figureName: String): Cooldown {
+        when (val result = core.craft(figureName, item, quantity)) {
             is Outcome.Error -> logger.error("${result.value::class.java}")
             is Outcome.Success -> when (result.value) {
                 is CraftResult.CharacterIsBusy -> logger.info("$figureName is busy")

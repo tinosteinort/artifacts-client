@@ -1,7 +1,7 @@
 package artifacts.adapter
 
 import artifacts.adapter.dto.*
-import artifacts.business.Game
+import artifacts.business.GameCore
 import artifacts.business.action.*
 import artifacts.business.common.Cooldown
 import artifacts.business.common.GameError
@@ -16,11 +16,11 @@ import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 
-class ArtifactsGame(
+class ArtifactsGameCore(
     private val httpClient: HttpClient,
     private val artifactsApiUrl: String,
     private val authToken: String
-) : Game {
+) : GameCore {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -276,6 +276,6 @@ class ArtifactsGame(
 
     companion object {
 
-        private val logger = Loggers.getLogger(ArtifactsGame::class.java)
+        private val logger = Loggers.getLogger(ArtifactsGameCore::class.java)
     }
 }
