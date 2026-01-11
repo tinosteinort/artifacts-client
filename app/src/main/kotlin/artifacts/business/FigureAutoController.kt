@@ -4,7 +4,8 @@ import artifacts.business.action.CraftAction
 
 class FigureAutoController(
     val figure: Figure,
-    var autoControl: Boolean = false
+    var autoControl: Boolean = false,
+    var controller: (Figure) -> Unit,
 ) {
 
     fun control() {
@@ -12,18 +13,6 @@ class FigureAutoController(
             return
         }
 
-        figure.setActions(
-            //listOf(
-            //    RestAction(),
-            //    MoveAction {
-            //        Places.CHICKEN
-            //    },
-            //    FightAction(),
-            //    FightAction(),
-            //)
-            listOf(
-                CraftAction(Items.COOKED_CHICKEN, 1)
-            )
-        )
+        controller(figure)
     }
 }

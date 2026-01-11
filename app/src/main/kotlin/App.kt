@@ -1,6 +1,4 @@
 import artifacts.adapter.ArtifactsGameCore
-import artifacts.business.Figure
-import artifacts.business.FigureAutoController
 import artifacts.business.Game
 import artifacts.business.Items
 import artifacts.business.action.CraftAction
@@ -18,19 +16,22 @@ fun main() {
     )
 
     val game = Game(core)
+    game.registerFigure("Henk")
+    game.run()
 
-    val henk = Figure(core, "Henk")
-
-    henk.setActions(
-        listOf(
-            //MoveAction { Places.WORKSHOP_COOKING },
-            CraftAction(Items.COOKED_CHICKEN, 14)
+    game.autoControl("Henk") { figure ->
+        figure.setActions(
+            //listOf(
+            //    RestAction(),
+            //    MoveAction {
+            //        Places.CHICKEN
+            //    },
+            //    FightAction(),
+            //    FightAction(),
+            //)
+            listOf(
+                CraftAction(Items.COOKED_CHICKEN, 1)
+            )
         )
-    )
-
-    val henkController = FigureAutoController(henk, true)
-    game.run {
-        henk.executeAction()
-        henkController.control()
     }
 }
