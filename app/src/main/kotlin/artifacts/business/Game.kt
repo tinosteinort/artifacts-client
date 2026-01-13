@@ -1,19 +1,27 @@
 package artifacts.business
 
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
 class Game(private val core: GameCore) {
 
+    private val executor: ExecutorService = Executors.newFixedThreadPool(1)
     private val figures: MutableMap<String, Figure> = mutableMapOf()
     private val autoControllers: MutableMap<String, FigureAutoController> = mutableMapOf()
 
-    var running: Boolean = true
+    var running: Boolean = false
+        private set
 
-    fun run() {
-        while (running) {
+    private fun run() {
+        executeActionsOfFigure()
+        autoControlFigures()
 
-            executeActionsOfFigure()
-            autoControlFigures()
+        Thread.sleep(1000)
 
-            Thread.sleep(1000)
+        if (running) {
+            executor.execute {
+                run()
+            }
         }
     }
 
@@ -29,18 +37,57 @@ class Game(private val core: GameCore) {
         }
     }
 
+    fun start() {
+        if (running) {
+            return
+        }
+        executor.execute {
+            running = true
+            executor.execute {
+                run()
+            }
+        }
+    }
+
+    fun stop() {
+        if (!running) {
+            return
+        }
+        executor.execute {
+            running = false
+            executor.shutdown()
+        }
+    }
+
     fun registerFigure(figureName: String) {
-        figures[figureName] = Figure(core, figureName)
+        executor.execute {
+            figures[figureName] = Figure(core, figureName)
+        }
     }
 
     /**
      * controller will be called every time, when actions of figure are empty
      */
     fun autoControl(figureName: String, controller: (Figure) -> Unit) {
-        autoControllers[figureName] = FigureAutoController(
-            figure = figures[figureName]!!,
-            autoControl = true,
-            controller = controller
-        )
+        executor.execute {
+            autoControllers.remove(figureName)
+            autoControllers[figureName] = FigureAutoController(
+                figure = figures[figureName]!!,
+                autoControl = true,
+                controller = controller
+            )
+        }
+    }
+
+    fun control(figureName: String, controller: (Figure) -> Unit) {
+        executor.execute {
+            controller(figures[figureName]!!)
+        }
+    }
+
+    fun autoControlOff(figureName: String) {
+        executor.execute {
+            autoControllers.remove(figureName)
+        }
     }
 }
