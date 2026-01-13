@@ -11,9 +11,8 @@ class Figure(
     private val actions: MutableList<Action> = mutableListOf()
     private var cooldown: Cooldown? = null
 
-    fun setActions(actions: List<Action>) {
-        this.actions.clear()
-        this.actions.addAll(actions)
+    fun setAction(action: Action) {
+        this.actions.add(action)
     }
 
     fun executeAction() {

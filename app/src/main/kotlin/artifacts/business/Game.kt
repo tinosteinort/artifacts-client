@@ -79,6 +79,22 @@ class Game(private val core: GameCore) {
         }
     }
 
+    /**
+     * controller will be called every time, when actions of figure are empty
+     */
+    fun autoControl(figureName: String, controller: Controller) {
+        executor.execute {
+            autoControllers.remove(figureName)
+            autoControllers[figureName] = FigureAutoController(
+                figure = figures[figureName]!!,
+                autoControl = true,
+                controller = { figure ->
+                    controller.control(figure)
+                }
+            )
+        }
+    }
+
     fun control(figureName: String, controller: (Figure) -> Unit) {
         executor.execute {
             controller(figures[figureName]!!)

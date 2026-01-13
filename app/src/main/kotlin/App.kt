@@ -1,9 +1,7 @@
 import artifacts.adapter.ArtifactsGameCore
 import artifacts.business.Game
-import artifacts.business.Places
-import artifacts.business.action.FightAction
-import artifacts.business.action.MoveAction
 import artifacts.business.action.RestAction
+import artifacts.business.controller.Fighter
 import java.net.http.HttpClient
 
 class App
@@ -30,23 +28,14 @@ fun main() {
                 game.stop()
             }
 
-            "Henk fight chicken" -> {
-                game.autoControl("Henk") { figure ->
-                    figure.setActions(
-                        listOf(
-                            RestAction(),
-                            MoveAction { Places.CHICKEN },
-                            FightAction(),
-                            FightAction(),
-                        )
-                    )
+            "Henk rest" -> {
+                game.control("Henk") { figure ->
+                    figure.setAction(RestAction())
                 }
             }
 
-            "Henk rest" -> {
-                game.control("Henk") { figure ->
-                    figure.setActions(listOf(RestAction()))
-                }
+            "Henk fight" -> {
+                game.autoControl("Henk", Fighter())
             }
 
             "Henk auto off" -> {
