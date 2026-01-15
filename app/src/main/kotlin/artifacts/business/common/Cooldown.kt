@@ -4,7 +4,7 @@ import java.time.Instant
 
 class Cooldown private constructor(
     private val start: Instant,
-    private val seconds: Int,
+    val seconds: Int,
 ) {
 
     fun inCooldown(): Boolean =
@@ -17,5 +17,7 @@ class Cooldown private constructor(
                 start = Instant.now(),
                 seconds = seconds
             )
+
+        val NO_COOLDOWN = forSeconds(0)
     }
 }

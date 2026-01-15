@@ -7,13 +7,12 @@ class Game(private val core: GameCore) {
 
     private val executor: ExecutorService = Executors.newFixedThreadPool(1)
     private val figures: MutableMap<String, Figure> = mutableMapOf()
-    private val autoControllers: MutableMap<String, FigureAutoController> = mutableMapOf()
+    private val autoControllers: MutableMap<String, AutoController> = mutableMapOf()
 
     var running: Boolean = false
         private set
 
     private fun run() {
-        executeActionsOfFigure()
         autoControlFigures()
 
         Thread.sleep(1000)
@@ -22,12 +21,6 @@ class Game(private val core: GameCore) {
             executor.execute {
                 run()
             }
-        }
-    }
-
-    private fun executeActionsOfFigure() {
-        figures.forEach { (_, figure) ->
-            figure.executeAction()
         }
     }
 
@@ -65,32 +58,12 @@ class Game(private val core: GameCore) {
         }
     }
 
-    /**
-     * controller will be called every time, when actions of figure are empty
-     */
-    fun autoControl(figureName: String, controller: (Figure) -> Unit) {
-        executor.execute {
-            autoControllers.remove(figureName)
-            autoControllers[figureName] = FigureAutoController(
-                figure = figures[figureName]!!,
-                autoControl = true,
-                controller = controller
-            )
-        }
-    }
-
-    /**
-     * controller will be called every time, when actions of figure are empty
-     */
     fun autoControl(figureName: String, controller: Controller) {
         executor.execute {
             autoControllers.remove(figureName)
-            autoControllers[figureName] = FigureAutoController(
+            autoControllers[figureName] = AutoController(
                 figure = figures[figureName]!!,
-                autoControl = true,
-                controller = { figure ->
-                    controller.control(figure)
-                }
+                controller = controller
             )
         }
     }

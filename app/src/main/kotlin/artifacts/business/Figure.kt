@@ -1,38 +1,35 @@
 package artifacts.business
 
-import artifacts.business.common.Cooldown
+import artifacts.business.action.CraftResult
+import artifacts.business.action.FightResult
+import artifacts.business.action.GatherResult
+import artifacts.business.action.MoveResult
+import artifacts.business.action.RestResult
+import artifacts.business.action.UnequipResult
+import artifacts.business.common.GameError
+import artifacts.business.common.Position
+import artifacts.business.util.Outcome
 
 class Figure(
     private val core: GameCore,
-    private val figureName: String,
+    val name: String,
 ) {
 
-    private var currentAction: Action? = null
-    private val actions: MutableList<Action> = mutableListOf()
-    private var cooldown: Cooldown? = null
+    fun move(position: Position): Outcome<MoveResult, GameError> =
+        core.move(name, position)
 
-    fun setAction(action: Action) {
-        this.actions.add(action)
-    }
+    fun fight(): Outcome<FightResult, GameError> =
+        core.fight(name)
 
-    fun executeAction() {
+    fun rest(): Outcome<RestResult, GameError> =
+        core.rest(name)
 
-        if (currentAction == null && actions.isNotEmpty()) {
-            currentAction = actions.removeFirst()
-            cooldown = currentAction?.execute(core, figureName)
-        } else {
-            if (!inCooldown()) {
-                currentAction = null
-                cooldown = null
-            }
-        }
-    }
+    fun gather(): Outcome<GatherResult, GameError> =
+        core.gather(name)
 
-    private fun inCooldown(): Boolean =
-        cooldown?.inCooldown() ?: false
+    fun craft(item: String, quantity: Int): Outcome<CraftResult, GameError> =
+        core.craft(name, item, quantity)
 
-    fun isBusy(): Boolean =
-        currentAction != null
-                || actions.isNotEmpty()
-                || inCooldown()
+    fun unequip(slot: String, quantity: Int): Outcome<UnequipResult, GameError> =
+        core.unequip(name, slot, quantity)
 }
