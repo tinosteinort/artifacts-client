@@ -1,6 +1,7 @@
 package artifacts.business
 
 import artifacts.business.action.CraftResult
+import artifacts.business.action.EquipResult
 import artifacts.business.action.FightResult
 import artifacts.business.action.GatherResult
 import artifacts.business.action.MoveResult
@@ -29,6 +30,9 @@ class Figure(
 
     fun craft(item: String, quantity: Int): Outcome<CraftResult, GameError> =
         core.craft(name, item, quantity)
+
+    fun equip(item: String, slot: String, quantity: Int): Outcome<EquipResult, GameError> =
+        core.equip(name, item, slot, quantity)
 
     fun unequip(slot: String, quantity: Int): Outcome<UnequipResult, GameError> =
         core.unequip(name, slot, quantity)

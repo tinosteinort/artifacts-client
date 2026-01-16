@@ -131,6 +131,30 @@ fun main() {
                 }
             }
 
+            "equip" -> {
+                val item = "aaa"
+                val slot = "bbb"
+                val quantity = 1
+                game.control(figureName) { figure ->
+                    when (val result = figure.equip(item, slot, quantity)) {
+                        is Outcome.Error -> logger.error(result.value)
+                        is Outcome.Success -> when (result.value) {
+                            is EquipResult.CharacterIsBusy -> logger.info("$figureName is busy")
+                            is EquipResult.CharacterIsInCooldown -> logger.info("$figureName is in cooldown")
+                            is EquipResult.ConditionsNotMet -> logger.info("$figureName does not match conditions")
+                            is EquipResult.InventoryFull -> logger.info("inventory of $figureName is full")
+                            is EquipResult.ItemIsAlreadyEquipped -> logger.info("$figureName is already epuiped")
+                            is EquipResult.ItemNotFound -> logger.info("$figureName: item not found")
+                            is EquipResult.MissingRequiredItems -> logger.info("$figureName is missing items")
+                            is EquipResult.NotEnoughHp -> logger.info("$figureName has not enough Hp")
+                            is EquipResult.SlotNotEmpty -> logger.info("$figureName: slot is not empty")
+                            is EquipResult.Success -> logger.info("$figureName was equipeed")
+                            is EquipResult.TooManyUtilities -> logger.info("$figureName: too many utilities")
+                        }
+                    }
+                }
+            }
+
             "unequip" -> {
                 game.control(figureName) { figure ->
                     val slot = "abc"

@@ -223,6 +223,54 @@ class ArtifactsGameCore(
         }
     }
 
+    override fun equip(character: String, item: String, slot: String, quantity: Int): Outcome<EquipResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/equip"))
+            .configureHeaders()
+            .POST(
+                BodyPublishers.ofString(
+                    """
+                    {
+                      "code": "$item",
+                      "slot": "$slot",
+                      "quantity": $quantity
+                    }    
+                    """.trimIndent()
+                )
+            )
+            .build()
+
+        val response = httpClient.send(request, BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val unequipData = json.decodeFromString<UnequipResponseDto>(response.body())
+
+                Outcome.success(
+                    EquipResult.Success(
+                        cooldown = Cooldown.forSeconds(
+                            unequipData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
+            }
+
+            404 -> Outcome.success(EquipResult.ItemNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            478 -> Outcome.success(EquipResult.MissingRequiredItems())
+            483 -> Outcome.success(EquipResult.NotEnoughHp())
+            484 -> Outcome.success(EquipResult.TooManyUtilities())
+            485 -> Outcome.success(EquipResult.ItemIsAlreadyEquipped())
+            486 -> Outcome.success(EquipResult.CharacterIsBusy())
+            491 -> Outcome.success(EquipResult.SlotNotEmpty())
+            496 -> Outcome.success(EquipResult.ConditionsNotMet())
+            497 -> Outcome.success(EquipResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(EquipResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
     override fun unequip(character: String, slot: String, quantity: Int): Outcome<UnequipResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/${character}/action/unequip"))
