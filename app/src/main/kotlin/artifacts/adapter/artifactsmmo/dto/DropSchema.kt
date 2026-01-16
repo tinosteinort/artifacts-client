@@ -1,4 +1,4 @@
-package artifacts.adapter.dto
+package artifacts.adapter.artifactsmmo.dto
 
 import kotlinx.serialization.Serializable
 

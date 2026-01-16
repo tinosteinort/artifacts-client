@@ -1,4 +1,4 @@
-import artifacts.adapter.ArtifactsGameCore
+import artifacts.adapter.artifactsmmo.ArtifactsGameCore
 import artifacts.business.Game
 import artifacts.business.Items
 import artifacts.business.Places

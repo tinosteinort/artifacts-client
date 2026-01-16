@@ -1,8 +1,8 @@
-package artifacts.adapter.dto
+package artifacts.adapter.artifactsmmo.dto
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-class CraftingResponseDto(
+data class GatherResponseDto(
     val data: SkillDataSchema,
 )

@@ -1,10 +1,10 @@
-package artifacts.adapter.dto
+package artifacts.adapter.artifactsmmo.dto
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CharacterRestDataSchema(
+data class SkillDataSchema(
     val cooldown: CooldownSchema,
-    val hp_restored: Int,
+    val details: SkillInfoSchema,
     val character: CharacterSchema,
 )
