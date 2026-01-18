@@ -3,7 +3,7 @@ package artifacts.adapter.cli
 import artifacts.business.Game
 import artifacts.business.action.*
 import artifacts.business.common.Position
-import artifacts.business.controller.Fighter
+import artifacts.logic.Fighter
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
 

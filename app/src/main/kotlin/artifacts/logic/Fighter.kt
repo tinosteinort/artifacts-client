@@ -1,4 +1,4 @@
-package artifacts.business.controller
+package artifacts.logic
 
 import artifacts.business.Controller
 import artifacts.business.Figure
