@@ -3,6 +3,7 @@ package artifacts.adapter.artifactsmmo
 import artifacts.adapter.artifactsmmo.dto.*
 import artifacts.business.GameCore
 import artifacts.business.Item
+import artifacts.business.Slot
 import artifacts.business.action.*
 import artifacts.business.common.Cooldown
 import artifacts.business.common.GameError
@@ -223,7 +224,7 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun equip(character: String, item: Item, slot: String, quantity: Int): Outcome<EquipResult, GameError> {
+    override fun equip(character: String, item: Item, slot: Slot, quantity: Int): Outcome<EquipResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/${character}/action/equip"))
             .configureHeaders()
@@ -232,7 +233,7 @@ class ArtifactsGameCore(
                     """
                     {
                       "code": "${item.value}",
-                      "slot": "$slot",
+                      "slot": "${slot.value}",
                       "quantity": $quantity
                     }    
                     """.trimIndent()
@@ -271,7 +272,7 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun unequip(character: String, slot: String, quantity: Int): Outcome<UnequipResult, GameError> {
+    override fun unequip(character: String, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/${character}/action/unequip"))
             .configureHeaders()
@@ -279,7 +280,7 @@ class ArtifactsGameCore(
                 HttpRequest.BodyPublishers.ofString(
                     """
                     {
-                      "slot": "$slot",
+                      "slot": "${slot.value}",
                       "quantity": $quantity
                     }    
                     """.trimIndent()

@@ -1,4 +1,5 @@
 .idea
 .gradle
+.kotlin
 *.private.env.json
 build

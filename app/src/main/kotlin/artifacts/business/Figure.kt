@@ -25,9 +25,9 @@ class Figure(
     fun craft(item: Item, quantity: Int): Outcome<CraftResult, GameError> =
         core.craft(name, item, quantity)
 
-    fun equip(item: Item, slot: String, quantity: Int): Outcome<EquipResult, GameError> =
+    fun equip(item: Item, slot: Slot, quantity: Int): Outcome<EquipResult, GameError> =
         core.equip(name, item, slot, quantity)
 
-    fun unequip(slot: String, quantity: Int): Outcome<UnequipResult, GameError> =
+    fun unequip(slot: Slot, quantity: Int): Outcome<UnequipResult, GameError> =
         core.unequip(name, slot, quantity)
 }

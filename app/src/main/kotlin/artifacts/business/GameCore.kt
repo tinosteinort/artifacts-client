@@ -12,6 +12,6 @@ interface GameCore {
     fun rest(character: String): Outcome<RestResult, GameError>
     fun gather(character: String): Outcome<GatherResult, GameError>
     fun craft(character: String, item: Item, quantity: Int): Outcome<CraftResult, GameError>
-    fun equip(character: String, item: Item, slot: String, quantity: Int = 1): Outcome<EquipResult, GameError>
-    fun unequip(character: String, slot: String, quantity: Int): Outcome<UnequipResult, GameError>
+    fun equip(character: String, item: Item, slot: Slot, quantity: Int = 1): Outcome<EquipResult, GameError>
+    fun unequip(character: String, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError>
 }

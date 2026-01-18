@@ -2,6 +2,7 @@ package artifacts.adapter.cli
 
 import artifacts.business.Game
 import artifacts.business.Item
+import artifacts.business.Slot
 import artifacts.business.action.*
 import artifacts.business.common.Position
 import artifacts.logic.Fighter
@@ -37,9 +38,9 @@ class CliAdapter(private val game: Game) {
         return Item(readln())
     }
 
-    private fun readSlot(): String {
+    private fun readSlot(): Slot {
         print("slot > ")
-        return readln()
+        return Slot.valueOf(readln())
     }
 
     private fun readQuantity(): Int {

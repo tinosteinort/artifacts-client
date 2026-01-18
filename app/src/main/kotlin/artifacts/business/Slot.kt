@@ -1,6 +1,6 @@
 package artifacts.business
 
-enum class Slot(private val value: String) {
+enum class Slot(val value: String) {
 
     WEAPON("weapon"),
     SHIELD("shield"),
