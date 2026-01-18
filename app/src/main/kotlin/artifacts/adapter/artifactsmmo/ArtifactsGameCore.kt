@@ -47,25 +47,25 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val moveData = json.decodeFromString<MoveResponseDto>(response.body())
-                Outcome.Companion.success(
+                Outcome.success(
                     MoveResult.Success(
-                        cooldown = Cooldown.Companion.forSeconds(
+                        cooldown = Cooldown.forSeconds(
                             moveData.data.cooldown.remaining_seconds
                         )
                     )
                 )
             }
 
-            404 -> Outcome.Companion.error(GameError.MapNotFound())
-            422 -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            486 -> Outcome.Companion.success(MoveResult.CharacterIsBusy())
-            490 -> Outcome.Companion.success(MoveResult.AlreadyThere())
-            496 -> Outcome.Companion.success(MoveResult.ConditionsNotMet())
-            498 -> Outcome.Companion.error(GameError.CharacterNotFound())
-            499 -> Outcome.Companion.success(MoveResult.CharacterIsInCooldown())
-            595 -> Outcome.Companion.error(GameError.NoPathAvailable())
-            596 -> Outcome.Companion.success(MoveResult.MapIsBlocked())
-            else -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            404 -> Outcome.error(GameError.MapNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(MoveResult.CharacterIsBusy())
+            490 -> Outcome.success(MoveResult.AlreadyThere())
+            496 -> Outcome.success(MoveResult.ConditionsNotMet())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(MoveResult.CharacterIsInCooldown())
+            595 -> Outcome.error(GameError.NoPathAvailable())
+            596 -> Outcome.success(MoveResult.MapIsBlocked())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
 
@@ -82,24 +82,24 @@ class ArtifactsGameCore(
             200 -> {
                 val fightData = json.decodeFromString<FightResponseDto>(response.body())
 
-                Outcome.Companion.success(
+                Outcome.success(
                     FightResult.FightEnded(
                         win = fightData.data.fight.result == "win",
                         opponent = fightData.data.fight.opponent,
-                        cooldown = Cooldown.Companion.forSeconds(
+                        cooldown = Cooldown.forSeconds(
                             fightData.data.cooldown.remaining_seconds
                         ),
                     )
                 )
             }
 
-            422 -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            486 -> Outcome.Companion.success(FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters())
-            497 -> Outcome.Companion.success(FightResult.InventoryFull())
-            498 -> Outcome.Companion.error(GameError.CharacterNotFound())
-            499 -> Outcome.Companion.success(FightResult.CharacterIsInCooldown())
-            598 -> Outcome.Companion.success(FightResult.NoMonsterOnMap())
-            else -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters())
+            497 -> Outcome.success(FightResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(FightResult.CharacterIsInCooldown())
+            598 -> Outcome.success(FightResult.NoMonsterOnMap())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
 
@@ -116,7 +116,7 @@ class ArtifactsGameCore(
             200 -> {
                 val gatheringData = json.decodeFromString<GatherResponseDto>(response.body())
 
-                Outcome.Companion.success(
+                Outcome.success(
                     GatherResult.Success(
                         items = gatheringData.data.details.items
                             .map {
@@ -125,21 +125,21 @@ class ArtifactsGameCore(
                                     quantity = it.quantity
                                 )
                             },
-                        cooldown = Cooldown.Companion.forSeconds(
+                        cooldown = Cooldown.forSeconds(
                             gatheringData.data.cooldown.remaining_seconds
                         ),
                     )
                 )
             }
 
-            422 -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            486 -> Outcome.Companion.success(GatherResult.CharacterIsBusy())
-            493 -> Outcome.Companion.success(GatherResult.SkillLevelTooLow())
-            497 -> Outcome.Companion.success(GatherResult.InventoryFull())
-            498 -> Outcome.Companion.error(GameError.CharacterNotFound())
-            499 -> Outcome.Companion.success(GatherResult.CharacterIsInCooldown())
-            598 -> Outcome.Companion.success(GatherResult.NoResourceOnMap())
-            else -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(GatherResult.CharacterIsBusy())
+            493 -> Outcome.success(GatherResult.SkillLevelTooLow())
+            497 -> Outcome.success(GatherResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(GatherResult.CharacterIsInCooldown())
+            598 -> Outcome.success(GatherResult.NoResourceOnMap())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
 
@@ -165,7 +165,7 @@ class ArtifactsGameCore(
             200 -> {
                 val craftingData = json.decodeFromString<CraftingResponseDto>(response.body())
 
-                Outcome.Companion.success(
+                Outcome.success(
                     CraftResult.Success(
                         items = craftingData.data.details.items
                             .map {
@@ -174,22 +174,22 @@ class ArtifactsGameCore(
                                     quantity = it.quantity
                                 )
                             },
-                        cooldown = Cooldown.Companion.forSeconds(
+                        cooldown = Cooldown.forSeconds(
                             craftingData.data.cooldown.remaining_seconds
                         ),
                     )
                 )
             }
 
-            404 -> Outcome.Companion.success(CraftResult.CraftNotFound())
-            422 -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            478 -> Outcome.Companion.success(CraftResult.MissingRequiredItems())
-            486 -> Outcome.Companion.success(CraftResult.CharacterIsBusy())
-            493 -> Outcome.Companion.success(CraftResult.SkillLevelTooLow())
-            497 -> Outcome.Companion.success(CraftResult.InventoryFull())
-            498 -> Outcome.Companion.error(GameError.CharacterNotFound())
-            499 -> Outcome.Companion.success(CraftResult.CharacterIsInCooldown())
-            else -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            404 -> Outcome.success(CraftResult.CraftNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            478 -> Outcome.success(CraftResult.MissingRequiredItems())
+            486 -> Outcome.success(CraftResult.CharacterIsBusy())
+            493 -> Outcome.success(CraftResult.SkillLevelTooLow())
+            497 -> Outcome.success(CraftResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(CraftResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
 
@@ -206,20 +206,20 @@ class ArtifactsGameCore(
             200 -> {
                 val restData = json.decodeFromString<RestResponseDto>(response.body())
 
-                Outcome.Companion.success(
+                Outcome.success(
                     RestResult.Success(
-                        cooldown = Cooldown.Companion.forSeconds(
+                        cooldown = Cooldown.forSeconds(
                             restData.data.cooldown.remaining_seconds
                         ),
                     )
                 )
             }
 
-            422 -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            486 -> Outcome.Companion.success(RestResult.CharacterIsBusy())
-            498 -> Outcome.Companion.error(GameError.CharacterNotFound())
-            499 -> Outcome.Companion.success(RestResult.CharacterIsInCooldown())
-            else -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            486 -> Outcome.success(RestResult.CharacterIsBusy())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(RestResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
 
@@ -246,28 +246,28 @@ class ArtifactsGameCore(
             200 -> {
                 val unequipData = json.decodeFromString<UnequipResponseDto>(response.body())
 
-                Outcome.Companion.success(
+                Outcome.success(
                     EquipResult.Success(
-                        cooldown = Cooldown.Companion.forSeconds(
+                        cooldown = Cooldown.forSeconds(
                             unequipData.data.cooldown.remaining_seconds
                         ),
                     )
                 )
             }
 
-            404 -> Outcome.Companion.success(EquipResult.ItemNotFound())
-            422 -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            478 -> Outcome.Companion.success(EquipResult.MissingRequiredItems())
-            483 -> Outcome.Companion.success(EquipResult.NotEnoughHp())
-            484 -> Outcome.Companion.success(EquipResult.TooManyUtilities())
-            485 -> Outcome.Companion.success(EquipResult.ItemIsAlreadyEquipped())
-            486 -> Outcome.Companion.success(EquipResult.CharacterIsBusy())
-            491 -> Outcome.Companion.success(EquipResult.SlotNotEmpty())
-            496 -> Outcome.Companion.success(EquipResult.ConditionsNotMet())
-            497 -> Outcome.Companion.success(EquipResult.InventoryFull())
-            498 -> Outcome.Companion.error(GameError.CharacterNotFound())
-            499 -> Outcome.Companion.success(EquipResult.CharacterIsInCooldown())
-            else -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            404 -> Outcome.success(EquipResult.ItemNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            478 -> Outcome.success(EquipResult.MissingRequiredItems())
+            483 -> Outcome.success(EquipResult.NotEnoughHp())
+            484 -> Outcome.success(EquipResult.TooManyUtilities())
+            485 -> Outcome.success(EquipResult.ItemIsAlreadyEquipped())
+            486 -> Outcome.success(EquipResult.CharacterIsBusy())
+            491 -> Outcome.success(EquipResult.SlotNotEmpty())
+            496 -> Outcome.success(EquipResult.ConditionsNotMet())
+            497 -> Outcome.success(EquipResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(EquipResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
 
@@ -293,25 +293,25 @@ class ArtifactsGameCore(
             200 -> {
                 val unequipData = json.decodeFromString<UnequipResponseDto>(response.body())
 
-                Outcome.Companion.success(
+                Outcome.success(
                     UnequipResult.Success(
-                        cooldown = Cooldown.Companion.forSeconds(
+                        cooldown = Cooldown.forSeconds(
                             unequipData.data.cooldown.remaining_seconds
                         ),
                     )
                 )
             }
 
-            404 -> Outcome.Companion.success(UnequipResult.ItemNotFound())
-            422 -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            478 -> Outcome.Companion.success(UnequipResult.MissingRequiredItems())
-            483 -> Outcome.Companion.success(UnequipResult.NotEnoughHp())
-            486 -> Outcome.Companion.success(UnequipResult.CharacterIsBusy())
-            491 -> Outcome.Companion.success(UnequipResult.SlotNotEquipped())
-            497 -> Outcome.Companion.success(UnequipResult.InventoryFull())
-            498 -> Outcome.Companion.error(GameError.CharacterNotFound())
-            499 -> Outcome.Companion.success(UnequipResult.CharacterIsInCooldown())
-            else -> Outcome.Companion.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            404 -> Outcome.success(UnequipResult.ItemNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            478 -> Outcome.success(UnequipResult.MissingRequiredItems())
+            483 -> Outcome.success(UnequipResult.NotEnoughHp())
+            486 -> Outcome.success(UnequipResult.CharacterIsBusy())
+            491 -> Outcome.success(UnequipResult.SlotNotEquipped())
+            497 -> Outcome.success(UnequipResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(UnequipResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
 
