@@ -7,11 +7,11 @@ import artifacts.business.util.Outcome
 
 interface GameCore {
 
-    fun move(character: String, position: Position): Outcome<MoveResult, GameError>
-    fun fight(character: String): Outcome<FightResult, GameError>
-    fun rest(character: String): Outcome<RestResult, GameError>
-    fun gather(character: String): Outcome<GatherResult, GameError>
-    fun craft(character: String, item: Item, quantity: Int): Outcome<CraftResult, GameError>
-    fun equip(character: String, item: Item, slot: Slot, quantity: Int = 1): Outcome<EquipResult, GameError>
-    fun unequip(character: String, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError>
+    fun move(name: Name, position: Position): Outcome<MoveResult, GameError>
+    fun fight(name: Name): Outcome<FightResult, GameError>
+    fun rest(name: Name): Outcome<RestResult, GameError>
+    fun gather(name: Name): Outcome<GatherResult, GameError>
+    fun craft(name: Name, item: Item, quantity: Int): Outcome<CraftResult, GameError>
+    fun equip(name: Name, item: Item, slot: Slot, quantity: Int = 1): Outcome<EquipResult, GameError>
+    fun unequip(name: Name, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError>
 }

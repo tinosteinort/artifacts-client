@@ -1,6 +1,7 @@
 import artifacts.adapter.artifactsmmo.ArtifactsGameCore
 import artifacts.adapter.cli.CliAdapter
 import artifacts.business.Game
+import artifacts.business.Name
 import java.net.http.HttpClient
 
 class App
@@ -14,7 +15,7 @@ fun main() {
             authToken = System.getenv("API_TOKEN")
         )
     )
-    game.registerFigure("Henk")
+    game.registerFigure(Name("Henk"))
     game.start()
 
     CliAdapter(game).run()

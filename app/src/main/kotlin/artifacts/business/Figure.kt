@@ -7,7 +7,7 @@ import artifacts.business.util.Outcome
 
 class Figure(
     private val core: GameCore,
-    val name: String,
+    val name: Name,
 ) {
 
     fun move(position: Position): Outcome<MoveResult, GameError> =

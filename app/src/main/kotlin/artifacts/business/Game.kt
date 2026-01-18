@@ -6,8 +6,8 @@ import java.util.concurrent.Executors
 class Game(private val core: GameCore) {
 
     private val executor: ExecutorService = Executors.newFixedThreadPool(1)
-    private val figures: MutableMap<String, Figure> = mutableMapOf()
-    private val autoControllers: MutableMap<String, AutoController> = mutableMapOf()
+    private val figures: MutableMap<Name, Figure> = mutableMapOf()
+    private val autoControllers: MutableMap<Name, AutoController> = mutableMapOf()
 
     var running: Boolean = false
         private set
@@ -52,31 +52,31 @@ class Game(private val core: GameCore) {
         }
     }
 
-    fun registerFigure(figureName: String) {
+    fun registerFigure(name: Name) {
         executor.execute {
-            figures[figureName] = Figure(core, figureName)
+            figures[name] = Figure(core, name)
         }
     }
 
-    fun autoControl(figureName: String, controller: Controller) {
+    fun autoControl(name: Name, controller: Controller) {
         executor.execute {
-            autoControllers.remove(figureName)
-            autoControllers[figureName] = AutoController(
-                figure = figures[figureName]!!,
+            autoControllers.remove(name)
+            autoControllers[name] = AutoController(
+                figure = figures[name]!!,
                 controller = controller
             )
         }
     }
 
-    fun control(figureName: String, controller: (Figure) -> Unit) {
+    fun control(name: Name, controller: (Figure) -> Unit) {
         executor.execute {
-            controller(figures[figureName]!!)
+            controller(figures[name]!!)
         }
     }
 
-    fun autoControlOff(figureName: String) {
+    fun autoControlOff(name: Name) {
         executor.execute {
-            autoControllers.remove(figureName)
+            autoControllers.remove(name)
         }
     }
 }

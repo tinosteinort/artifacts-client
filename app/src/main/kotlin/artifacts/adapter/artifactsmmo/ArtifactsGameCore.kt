@@ -3,6 +3,7 @@ package artifacts.adapter.artifactsmmo
 import artifacts.adapter.artifactsmmo.dto.*
 import artifacts.business.GameCore
 import artifacts.business.Item
+import artifacts.business.Name
 import artifacts.business.Slot
 import artifacts.business.action.*
 import artifacts.business.common.Cooldown
@@ -27,9 +28,9 @@ class ArtifactsGameCore(
         ignoreUnknownKeys = true
     }
 
-    override fun move(character: String, position: Position): Outcome<MoveResult, GameError> {
+    override fun move(name: Name, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/move"))
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/move"))
             .configureHeaders()
             .POST(
                 HttpRequest.BodyPublishers.ofString(
@@ -70,9 +71,9 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun fight(character: String): Outcome<FightResult, GameError> {
+    override fun fight(name: Name): Outcome<FightResult, GameError> {
         val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/fight"))
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/fight"))
             .configureHeaders()
             .POST(HttpRequest.BodyPublishers.noBody())
             .build()
@@ -104,9 +105,9 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun gather(character: String): Outcome<GatherResult, GameError> {
+    override fun gather(name: Name): Outcome<GatherResult, GameError> {
         val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/gathering"))
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/gathering"))
             .configureHeaders()
             .POST(HttpRequest.BodyPublishers.noBody())
             .build()
@@ -144,9 +145,9 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun craft(character: String, item: Item, quantity: Int): Outcome<CraftResult, GameError> {
+    override fun craft(name: Name, item: Item, quantity: Int): Outcome<CraftResult, GameError> {
         val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/crafting"))
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/crafting"))
             .configureHeaders()
             .POST(
                 HttpRequest.BodyPublishers.ofString(
@@ -194,9 +195,9 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun rest(character: String): Outcome<RestResult, GameError> {
+    override fun rest(name: Name): Outcome<RestResult, GameError> {
         val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/rest"))
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/rest"))
             .configureHeaders()
             .POST(HttpRequest.BodyPublishers.noBody())
             .build()
@@ -224,9 +225,9 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun equip(character: String, item: Item, slot: Slot, quantity: Int): Outcome<EquipResult, GameError> {
+    override fun equip(name: Name, item: Item, slot: Slot, quantity: Int): Outcome<EquipResult, GameError> {
         val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/equip"))
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/equip"))
             .configureHeaders()
             .POST(
                 HttpRequest.BodyPublishers.ofString(
@@ -272,9 +273,9 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun unequip(character: String, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError> {
+    override fun unequip(name: Name, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError> {
         val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/${character}/action/unequip"))
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/unequip"))
             .configureHeaders()
             .POST(
                 HttpRequest.BodyPublishers.ofString(
