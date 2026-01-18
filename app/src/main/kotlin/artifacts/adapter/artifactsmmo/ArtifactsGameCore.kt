@@ -1,19 +1,9 @@
 package artifacts.adapter.artifactsmmo
 
-import artifacts.adapter.artifactsmmo.dto.CraftingResponseDto
-import artifacts.adapter.artifactsmmo.dto.FightResponseDto
-import artifacts.adapter.artifactsmmo.dto.GatherResponseDto
-import artifacts.adapter.artifactsmmo.dto.MoveResponseDto
-import artifacts.adapter.artifactsmmo.dto.RestResponseDto
-import artifacts.adapter.artifactsmmo.dto.UnequipResponseDto
+import artifacts.adapter.artifactsmmo.dto.*
 import artifacts.business.GameCore
-import artifacts.business.action.CraftResult
-import artifacts.business.action.EquipResult
-import artifacts.business.action.FightResult
-import artifacts.business.action.GatherResult
-import artifacts.business.action.MoveResult
-import artifacts.business.action.RestResult
-import artifacts.business.action.UnequipResult
+import artifacts.business.Item
+import artifacts.business.action.*
 import artifacts.business.common.Cooldown
 import artifacts.business.common.GameError
 import artifacts.business.common.ItemDrop
@@ -153,7 +143,7 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun craft(character: String, item: String, quantity: Int): Outcome<CraftResult, GameError> {
+    override fun craft(character: String, item: Item, quantity: Int): Outcome<CraftResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/${character}/action/crafting"))
             .configureHeaders()
@@ -161,7 +151,7 @@ class ArtifactsGameCore(
                 HttpRequest.BodyPublishers.ofString(
                     """
                     {
-                      "code": "$item",
+                      "code": "${item.value}",
                       "quantity": $quantity
                     }    
                     """.trimIndent()
@@ -233,7 +223,7 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun equip(character: String, item: String, slot: String, quantity: Int): Outcome<EquipResult, GameError> {
+    override fun equip(character: String, item: Item, slot: String, quantity: Int): Outcome<EquipResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/${character}/action/equip"))
             .configureHeaders()
@@ -241,7 +231,7 @@ class ArtifactsGameCore(
                 HttpRequest.BodyPublishers.ofString(
                     """
                     {
-                      "code": "$item",
+                      "code": "${item.value}",
                       "slot": "$slot",
                       "quantity": $quantity
                     }    
