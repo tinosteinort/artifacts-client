@@ -1,14 +1,14 @@
 package artifacts.adapter.cli
 
-import artifacts.business.Game
-import artifacts.business.Item
-import artifacts.business.Name
-import artifacts.business.Slot
-import artifacts.business.action.*
+import artifacts.business.*
+import artifacts.business.result.*
+import artifacts.business.common.Item
+import artifacts.business.common.Name
 import artifacts.business.common.Position
-import artifacts.logic.Fighter
+import artifacts.business.common.Slot
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
+import artifacts.logic.Fighter
 
 class CliAdapter(private val game: Game) {
 
@@ -95,7 +95,7 @@ class CliAdapter(private val game: Game) {
                 }
 
                 "auto on" -> {
-                    game.autoControl(name, Fighter())
+                    game.autoControl(name, ::Fighter)
                 }
 
                 "auto off" -> {

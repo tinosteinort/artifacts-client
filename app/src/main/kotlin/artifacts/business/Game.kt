@@ -1,5 +1,6 @@
 package artifacts.business
 
+import artifacts.business.common.Name
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -58,25 +59,30 @@ class Game(private val core: GameCore) {
         }
     }
 
-    fun autoControl(name: Name, controller: Controller) {
+    fun autoControl(name: Name, factory: (core: GameCore, figure: Figure) -> Behaviour) {
         executor.execute {
             autoControllers.remove(name)
-            autoControllers[name] = AutoController(
-                figure = figures[name]!!,
-                controller = controller
-            )
-        }
-    }
 
-    fun control(name: Name, controller: (Figure) -> Unit) {
-        executor.execute {
-            controller(figures[name]!!)
+            val figure = figures[name]!!
+            val behaviour = factory(core, figure)
+            behaviour.init()
+
+            autoControllers[name] = AutoController(
+                figure = figure,
+                behaviour = behaviour
+            )
         }
     }
 
     fun autoControlOff(name: Name) {
         executor.execute {
             autoControllers.remove(name)
+        }
+    }
+
+    fun control(name: Name, controller: (Figure) -> Unit) {
+        executor.execute {
+            controller(figures[name]!!)
         }
     }
 }

@@ -5,16 +5,16 @@ import artifacts.business.util.Loggers
 
 class AutoController(
     val figure: Figure,
-    var controller: Controller,
+    var behaviour: Behaviour,
 ) {
     private var cooldown: Cooldown? = null
-    private val logger = Loggers.getLogger(controller::class.java)
+    private val logger = Loggers.getLogger(behaviour::class.java)
 
     fun control() {
         if (cooldown.inCooldown()) {
             return
         }
-        cooldown = controller.control(figure)
+        cooldown = behaviour.control()
         logger.cooldown(figure, cooldown!!)
     }
 

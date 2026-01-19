@@ -1,23 +1,35 @@
 package artifacts.logic
 
-import artifacts.business.Controller
+import artifacts.business.Behaviour
 import artifacts.business.Figure
+import artifacts.business.GameCore
 import artifacts.business.Places
-import artifacts.business.action.FightResult
-import artifacts.business.action.MoveResult
+import artifacts.business.result.FightResult
+import artifacts.business.result.MoveResult
 import artifacts.business.common.Cooldown
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
 
-class Fighter : Controller {
+class Fighter(
+    private val core: GameCore,
+    private val figure: Figure,
+) : Behaviour {
 
-    override fun control(figure: Figure): Cooldown {
+    override fun init() =
+        when (core.init(figure.name)) {
+            is Outcome.Error -> throw RuntimeException("could not init ${figure.name}")
+            is Outcome.Success -> {
+                logger.info("init done for ${figure.name}")
+            }
+        }
 
-        return move(figure)
+    override fun control(): Cooldown {
+
+        return move()
         //return fight(figure)
     }
 
-    private fun fight(figure: Figure): Cooldown {
+    private fun fight(): Cooldown {
         return when (val result = figure.fight()) {
             is Outcome.Error -> {
                 logger.error(result.value)
@@ -57,7 +69,7 @@ class Fighter : Controller {
         }
     }
 
-    private fun move(figure: Figure): Cooldown =
+    private fun move(): Cooldown =
         when (val result = figure.move(Places.COWS)) {
             is Outcome.Error -> {
                 logger.error(result.value)

@@ -2,7 +2,8 @@ package artifacts.business
 
 import artifacts.business.common.Cooldown
 
-interface Controller {
+interface Behaviour {
 
-    fun control(figure: Figure) : Cooldown
+    fun init()
+    fun control() : Cooldown
 }

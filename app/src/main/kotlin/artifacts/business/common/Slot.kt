@@ -1,4 +1,4 @@
-package artifacts.business
+package artifacts.business.common
 
 enum class Slot(val value: String) {
 

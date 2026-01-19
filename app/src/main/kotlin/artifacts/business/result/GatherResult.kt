@@ -1,4 +1,4 @@
-package artifacts.business.action
+package artifacts.business.result
 
 import artifacts.business.common.Cooldown
 import artifacts.business.common.ItemDrop

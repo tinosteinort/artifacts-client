@@ -2,14 +2,8 @@ package artifacts.adapter.artifactsmmo
 
 import artifacts.adapter.artifactsmmo.dto.*
 import artifacts.business.GameCore
-import artifacts.business.Item
-import artifacts.business.Name
-import artifacts.business.Slot
-import artifacts.business.action.*
-import artifacts.business.common.Cooldown
-import artifacts.business.common.GameError
-import artifacts.business.common.ItemDrop
-import artifacts.business.common.Position
+import artifacts.business.common.*
+import artifacts.business.result.*
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
 import kotlinx.serialization.json.Json
@@ -26,6 +20,43 @@ class ArtifactsGameCore(
 
     private val json = Json {
         ignoreUnknownKeys = true
+    }
+
+    /**
+     * Data of all characters is stored here. This will be updated on every action
+     * of the characters. So it is possible to ask this class for up-to-date
+     * information of the character, without doing a request everytime it is needed.
+     *
+     * The init method is needed, if the data is expected, before any action is
+     * executed. Because of this, the AutoController calls it at the start.
+     */
+    private val characters: MutableMap<Name, CharacterSchema> = mutableMapOf()
+
+    private fun updateCharacterData(data: CharacterSchema) {
+        characters[Name(data.name)] = data
+    }
+
+    override fun init(name: Name): Outcome<InitResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/characters"))
+            .configureHeaders()
+            .GET()
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val characterData = json.decodeFromString<GetCharactersResponseDto>(response.body())
+                characterData.data.forEach { data -> updateCharacterData(data) }
+
+                Outcome.success(
+                    InitResult.Success()
+                )
+            }
+
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
     }
 
     override fun move(name: Name, position: Position): Outcome<MoveResult, GameError> {
@@ -49,6 +80,8 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val moveData = json.decodeFromString<MoveResponseDto>(response.body())
+                updateCharacterData(moveData.data.character)
+
                 Outcome.success(
                     MoveResult.Success(
                         cooldown = Cooldown.forSeconds(
@@ -83,6 +116,7 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val fightData = json.decodeFromString<FightResponseDto>(response.body())
+                fightData.data.characters.forEach { data -> updateCharacterData(data) }
 
                 Outcome.success(
                     FightResult.FightEnded(
@@ -117,13 +151,14 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val gatheringData = json.decodeFromString<GatherResponseDto>(response.body())
+                updateCharacterData(gatheringData.data.character)
 
                 Outcome.success(
                     GatherResult.Success(
                         items = gatheringData.data.details.items
                             .map {
                                 ItemDrop(
-                                    item = it.code,
+                                    item = Item(it.code),
                                     quantity = it.quantity
                                 )
                             },
@@ -166,13 +201,14 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val craftingData = json.decodeFromString<CraftingResponseDto>(response.body())
+                updateCharacterData(craftingData.data.character)
 
                 Outcome.success(
                     CraftResult.Success(
                         items = craftingData.data.details.items
                             .map {
                                 ItemDrop(
-                                    item = it.code,
+                                    item = Item(it.code),
                                     quantity = it.quantity
                                 )
                             },
@@ -207,6 +243,7 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val restData = json.decodeFromString<RestResponseDto>(response.body())
+                updateCharacterData(restData.data.character)
 
                 Outcome.success(
                     RestResult.Success(
@@ -246,12 +283,13 @@ class ArtifactsGameCore(
 
         return when (response.statusCode()) {
             200 -> {
-                val unequipData = json.decodeFromString<UnequipResponseDto>(response.body())
+                val equipData = json.decodeFromString<UnequipResponseDto>(response.body())
+                updateCharacterData(equipData.data.character)
 
                 Outcome.success(
                     EquipResult.Success(
                         cooldown = Cooldown.forSeconds(
-                            unequipData.data.cooldown.remaining_seconds
+                            equipData.data.cooldown.remaining_seconds
                         ),
                     )
                 )
@@ -294,6 +332,7 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val unequipData = json.decodeFromString<UnequipResponseDto>(response.body())
+                updateCharacterData(unequipData.data.character)
 
                 Outcome.success(
                     UnequipResult.Success(
@@ -323,6 +362,50 @@ class ArtifactsGameCore(
         this.header("Content-Type", "application/json")
         return this
     }
+
+    override fun status(name: Name): Status =
+        characters[name]!!.let { data ->
+            Status(
+                level = data.level,
+                xp = data.xp,
+                maxXp = data.max_xp,
+                gold = data.gold,
+                hp = data.hp,
+                maxHp = data.max_hp,
+            )
+        }
+
+    override fun position(name: Name): Position =
+        characters[name]!!.let { data ->
+            Position(data.x, data.y)
+        }
+
+    override fun equipment(name: Name): Map<Slot, Equipment> =
+        characters[name]!!.let { data ->
+            mapOf(
+                Slot.WEAPON to Equipment(Item(data.weapon_slot), 1),
+                Slot.SHIELD to Equipment(Item(data.shield_slot), 1),
+                Slot.HELMET to Equipment(Item(data.helmet_slot), 1),
+                Slot.BODY_ARMOR to Equipment(Item(data.body_armor_slot), 1),
+                Slot.LEG_ARMOR to Equipment(Item(data.leg_armor_slot), 1),
+                Slot.BOOTS to Equipment(Item(data.boots_slot), 1),
+                Slot.RING1 to Equipment(Item(data.ring1_slot), 1),
+                Slot.RING2 to Equipment(Item(data.ring2_slot), 1),
+                Slot.AMULET to Equipment(Item(data.amulet_slot), 1),
+                Slot.ARTIFACT1 to Equipment(Item(data.artifact1_slot), 1),
+                Slot.ARTIFACT2 to Equipment(Item(data.artifact2_slot), 1),
+                Slot.ARTIFACT3 to Equipment(Item(data.artifact3_slot), 1),
+                Slot.UTILITY1 to Equipment(
+                    item = Item(data.utility1_slot),
+                    quantity = data.utility1_slot_quantity
+                ),
+                Slot.UTILITY2 to Equipment(
+                    item = Item(data.utility2_slot),
+                    quantity = data.utility2_slot_quantity
+                ),
+                Slot.BAG to Equipment(Item(data.bag_slot), 1),
+            )
+        }
 
     companion object {
 

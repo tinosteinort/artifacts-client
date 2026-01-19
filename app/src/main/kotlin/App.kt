@@ -1,7 +1,7 @@
 import artifacts.adapter.artifactsmmo.ArtifactsGameCore
 import artifacts.adapter.cli.CliAdapter
 import artifacts.business.Game
-import artifacts.business.Name
+import artifacts.business.common.Name
 import java.net.http.HttpClient
 
 class App

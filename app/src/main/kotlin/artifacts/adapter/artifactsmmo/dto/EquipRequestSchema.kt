@@ -7,5 +7,5 @@ data class EquipRequestSchema(
     val cooldown: CooldownSchema,
     val slot: String,
     val item: ItemSchema,
-    val character: CharacterFightDataSchema,
+    val character: CharacterSchema,
 )
