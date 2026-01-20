@@ -5,6 +5,7 @@ import artifacts.business.common.*
 import artifacts.business.result.*
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
+import artifacts.logic.Fighter
 import artifacts.logic.Follower
 
 class CliAdapter(private val game: Game) {
@@ -74,6 +75,10 @@ class CliAdapter(private val game: Game) {
                     game.autoControl(name) { core, figure ->
                         Follower(core, figure, target)
                     }
+                }
+
+                "fighter" -> {
+                    game.autoControl(name, ::Fighter)
                 }
 
                 "auto off" -> game.autoControlOff(name)
