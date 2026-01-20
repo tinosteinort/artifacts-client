@@ -16,6 +16,7 @@ fun main() {
         )
     )
     game.registerFigure(Name("Henk"))
+    game.registerFigure(Name("Grantel"))
     game.start()
 
     CliAdapter(game).run()

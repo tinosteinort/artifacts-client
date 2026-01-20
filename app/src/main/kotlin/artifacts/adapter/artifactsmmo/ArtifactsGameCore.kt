@@ -356,6 +356,99 @@ class ArtifactsGameCore(
         }
     }
 
+    override fun useItem(name: Name, item: Item, quantity: Int): Outcome<UseItemResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/use"))
+            .configureHeaders()
+            .POST(
+                HttpRequest.BodyPublishers.ofString(
+                    """
+                    {
+                      "code": "${item.value}",
+                      "quantity": $quantity
+                    }
+                    """.trimIndent()
+                )
+            )
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val useItemData = json.decodeFromString<UseItemResponseDto>(response.body())
+                updateCharacterData(useItemData.data.character)
+
+                Outcome.success(
+                    UseItemResult.Success(
+                        cooldown = Cooldown.forSeconds(
+                            useItemData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
+            }
+
+            404 -> Outcome.success(UseItemResult.ItemNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            476 -> Outcome.success(UseItemResult.ItemIsNotConsumable(item))
+            478 -> Outcome.success(UseItemResult.MissingRequiredItems())
+            486 -> Outcome.success(UseItemResult.CharacterIsBusy())
+            496 -> Outcome.success(UseItemResult.ConditionsNotMet())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(UseItemResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    override fun giveItems(name: Name, target: Name, items: Set<ItemPack>): Outcome<GiveItemsResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/$name/action/give/item"))
+            .configureHeaders()
+            .POST(
+                HttpRequest.BodyPublishers.ofString(
+                    json.encodeToString(
+                        GiveItemsRequestDto(
+                            items = items.map { itemPack ->
+                                SimpleItemSchema(
+                                    code = itemPack.item.value,
+                                    quantity = itemPack.quantity,
+                                )
+                            }.toSet(),
+                            character = target.value
+                        )
+                    )
+                )
+            )
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val giveItemsData = json.decodeFromString<GiveItemsResponseDto>(response.body())
+                updateCharacterData(giveItemsData.data.character)
+                updateCharacterData(giveItemsData.data.receiver_character)
+
+                Outcome.success(
+                    GiveItemsResult.Success(
+                        cooldown = Cooldown.forSeconds(
+                            giveItemsData.data.cooldown.remaining_seconds
+                        ),
+                    )
+                )
+            }
+
+            404 -> Outcome.success(GiveItemsResult.ItemNotFound())
+            422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+            478 -> Outcome.success(GiveItemsResult.MissingRequiredItems())
+            486 -> Outcome.success(GiveItemsResult.CharacterIsBusy())
+            497 -> Outcome.success(GiveItemsResult.InventoryFull())
+            498 -> Outcome.error(GameError.CharacterNotFound())
+            499 -> Outcome.success(GiveItemsResult.CharacterIsInCooldown())
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
     private fun HttpRequest.Builder.configureHeaders(): HttpRequest.Builder {
         this.header("Authorization", "Bearer $authToken")
         this.header("Accept", "application/json")

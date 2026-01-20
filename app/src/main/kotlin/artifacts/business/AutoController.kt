@@ -15,6 +15,14 @@ class AutoController(
             return
         }
         cooldown = behaviour.control()
+
+        logCooldownIfPresent()
+    }
+
+    private fun logCooldownIfPresent() {
+        if (cooldown == null || cooldown!!.seconds == 0) {
+            return
+        }
         logger.cooldown(figure, cooldown!!)
     }
 

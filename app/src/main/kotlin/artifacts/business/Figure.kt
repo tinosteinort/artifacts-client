@@ -1,13 +1,7 @@
 package artifacts.business
 
+import artifacts.business.common.*
 import artifacts.business.result.*
-import artifacts.business.common.Equipment
-import artifacts.business.common.GameError
-import artifacts.business.common.Item
-import artifacts.business.common.Name
-import artifacts.business.common.Position
-import artifacts.business.common.Slot
-import artifacts.business.common.Status
 import artifacts.business.util.Outcome
 
 class Figure(
@@ -38,4 +32,10 @@ class Figure(
 
     fun unequip(slot: Slot, quantity: Int): Outcome<UnequipResult, GameError> =
         core.unequip(name, slot, quantity)
+
+    fun useItem(item: Item, quantity: Int): Outcome<UseItemResult, GameError> =
+        core.useItem(name, item, quantity)
+
+    fun giveItems(target: Name, items: Set<ItemPack>): Outcome<GiveItemsResult, GameError> =
+        core.giveItems(name, target, items)
 }

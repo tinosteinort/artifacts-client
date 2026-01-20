@@ -15,6 +15,8 @@ interface GameCore {
     fun craft(name: Name, item: Item, quantity: Int): Outcome<CraftResult, GameError>
     fun equip(name: Name, item: Item, slot: Slot, quantity: Int = 1): Outcome<EquipResult, GameError>
     fun unequip(name: Name, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError>
+    fun useItem(name: Name, item: Item, quantity: Int): Outcome<UseItemResult, GameError>
+    fun giveItems(name: Name, target: Name, items: Set<ItemPack>): Outcome<GiveItemsResult, GameError>
 
     fun status(name: Name): Status
     fun position(name: Name): Position
