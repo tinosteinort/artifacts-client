@@ -1,6 +1,0 @@
-package artifacts.business.common
-
-data class ItemDrop(
-    val item: Item,
-    val quantity: Int,
-)

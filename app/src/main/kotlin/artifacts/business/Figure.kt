@@ -11,6 +11,7 @@ class Figure(
     fun status(): Status = core.status(name)
     fun position(): Position = core.position(name)
     fun equipment(): Map<Slot, Equipment> = core.equipment(name)
+    fun inventory(): Inventory = core.inventory(name)
 
     fun move(position: Position): Outcome<MoveResult, GameError> =
         core.move(name, position)
@@ -36,6 +37,6 @@ class Figure(
     fun useItem(item: Item, quantity: Int): Outcome<UseItemResult, GameError> =
         core.useItem(name, item, quantity)
 
-    fun giveItems(target: Name, items: Set<ItemPack>): Outcome<GiveItemsResult, GameError> =
+    fun giveItems(target: Name, items: Set<ItemPack<Item.Name>>): Outcome<GiveItemsResult, GameError> =
         core.giveItems(name, target, items)
 }

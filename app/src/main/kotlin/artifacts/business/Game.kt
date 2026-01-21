@@ -1,6 +1,9 @@
 package artifacts.business
 
 import artifacts.business.common.Name
+import artifacts.business.result.InitItemsResult
+import artifacts.business.util.GameException
+import artifacts.business.util.Outcome
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -37,10 +40,28 @@ class Game(private val core: GameCore) {
         }
         executor.execute {
             running = true
+            initItems()
             executor.execute {
                 run()
             }
         }
+    }
+
+    private fun initItems() {
+        var page = 1
+        var pages: Int?
+
+        do {
+            when (val result = core.initItems(page, 100)) {
+                is Outcome.Error -> throw GameException(result.value)
+                is Outcome.Success -> when (result.value) {
+                    is InitItemsResult.Success -> {
+                        page = result.value.page + 1
+                        pages = result.value.pages
+                    }
+                }
+            }
+        } while (page != pages + 1)
     }
 
     fun stop() {

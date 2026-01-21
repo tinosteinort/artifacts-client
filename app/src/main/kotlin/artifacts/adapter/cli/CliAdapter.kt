@@ -32,9 +32,9 @@ class CliAdapter(private val game: Game) {
             }
     }
 
-    private fun readItem(): Item {
+    private fun readItem(): Item.Name {
         print("item > ")
-        return Item(readln())
+        return Item.Name(readln())
     }
 
     private fun readSlot(): Slot {

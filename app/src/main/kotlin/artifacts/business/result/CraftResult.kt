@@ -1,12 +1,13 @@
 package artifacts.business.result
 
 import artifacts.business.common.Cooldown
-import artifacts.business.common.ItemDrop
+import artifacts.business.common.Item
+import artifacts.business.common.ItemPack
 
 sealed class CraftResult {
 
     class Success(
-        val items: List<ItemDrop>,
+        val items: List<ItemPack<Item.Name>>,
         val cooldown: Cooldown,
     ) : CraftResult()
 

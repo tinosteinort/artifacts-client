@@ -31,9 +31,40 @@ class ArtifactsGameCore(
      * executed. Because of this, the AutoController calls it at the start.
      */
     private val characters: MutableMap<Name, CharacterSchema> = mutableMapOf()
+    private val items: MutableMap<Item.Name, ItemSchema> = mutableMapOf()
 
     private fun updateCharacterData(data: CharacterSchema) {
         characters[Name(data.name)] = data
+    }
+
+    override fun initItems(page: Int, pageSize: Int): Outcome<InitItemsResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/items?page=$page&size=$pageSize"))
+            .configureHeaders()
+            .GET()
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val itemsData = json.decodeFromString<GetAllItemsResponseDto>(response.body())
+                itemsData.data.forEach { data ->
+                    items[Item.Name(data.code)] = data
+                }
+
+                Outcome.success(
+                    InitItemsResult.Success(
+                        total = itemsData.total,
+                        page = itemsData.page,
+                        pageSize = pageSize,
+                        pages = itemsData.pages
+                    )
+                )
+            }
+
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
     }
 
     override fun init(name: Name): Outcome<InitResult, GameError> {
@@ -157,8 +188,8 @@ class ArtifactsGameCore(
                     GatherResult.Success(
                         items = gatheringData.data.details.items
                             .map {
-                                ItemDrop(
-                                    item = Item(it.code),
+                                ItemPack(
+                                    item = Item.Name(it.code),
                                     quantity = it.quantity
                                 )
                             },
@@ -207,8 +238,8 @@ class ArtifactsGameCore(
                     CraftResult.Success(
                         items = craftingData.data.details.items
                             .map {
-                                ItemDrop(
-                                    item = Item(it.code),
+                                ItemPack(
+                                    item = Item.Name(it.code),
                                     quantity = it.quantity
                                 )
                             },
@@ -400,7 +431,7 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun giveItems(name: Name, target: Name, items: Set<ItemPack>): Outcome<GiveItemsResult, GameError> {
+    override fun giveItems(name: Name, target: Name, items: Set<ItemPack<Item.Name>>): Outcome<GiveItemsResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/$name/action/give/item"))
             .configureHeaders()
@@ -476,29 +507,48 @@ class ArtifactsGameCore(
     override fun equipment(name: Name): Map<Slot, Equipment> =
         characters[name]!!.let { data ->
             mapOf(
-                Slot.WEAPON to Equipment(Item(data.weapon_slot), 1),
-                Slot.SHIELD to Equipment(Item(data.shield_slot), 1),
-                Slot.HELMET to Equipment(Item(data.helmet_slot), 1),
-                Slot.BODY_ARMOR to Equipment(Item(data.body_armor_slot), 1),
-                Slot.LEG_ARMOR to Equipment(Item(data.leg_armor_slot), 1),
-                Slot.BOOTS to Equipment(Item(data.boots_slot), 1),
-                Slot.RING1 to Equipment(Item(data.ring1_slot), 1),
-                Slot.RING2 to Equipment(Item(data.ring2_slot), 1),
-                Slot.AMULET to Equipment(Item(data.amulet_slot), 1),
-                Slot.ARTIFACT1 to Equipment(Item(data.artifact1_slot), 1),
-                Slot.ARTIFACT2 to Equipment(Item(data.artifact2_slot), 1),
-                Slot.ARTIFACT3 to Equipment(Item(data.artifact3_slot), 1),
+                Slot.WEAPON to Equipment(Item.Name(data.weapon_slot), 1),
+                Slot.SHIELD to Equipment(Item.Name(data.shield_slot), 1),
+                Slot.HELMET to Equipment(Item.Name(data.helmet_slot), 1),
+                Slot.BODY_ARMOR to Equipment(Item.Name(data.body_armor_slot), 1),
+                Slot.LEG_ARMOR to Equipment(Item.Name(data.leg_armor_slot), 1),
+                Slot.BOOTS to Equipment(Item.Name(data.boots_slot), 1),
+                Slot.RING1 to Equipment(Item.Name(data.ring1_slot), 1),
+                Slot.RING2 to Equipment(Item.Name(data.ring2_slot), 1),
+                Slot.AMULET to Equipment(Item.Name(data.amulet_slot), 1),
+                Slot.ARTIFACT1 to Equipment(Item.Name(data.artifact1_slot), 1),
+                Slot.ARTIFACT2 to Equipment(Item.Name(data.artifact2_slot), 1),
+                Slot.ARTIFACT3 to Equipment(Item.Name(data.artifact3_slot), 1),
                 Slot.UTILITY1 to Equipment(
-                    item = Item(data.utility1_slot),
+                    item = Item.Name(data.utility1_slot),
                     quantity = data.utility1_slot_quantity
                 ),
                 Slot.UTILITY2 to Equipment(
-                    item = Item(data.utility2_slot),
+                    item = Item.Name(data.utility2_slot),
                     quantity = data.utility2_slot_quantity
                 ),
-                Slot.BAG to Equipment(Item(data.bag_slot), 1),
+                Slot.BAG to Equipment(Item.Name(data.bag_slot), 1),
             )
         }
+
+    override fun inventory(name: Name): Inventory {
+        return characters[name]!!.let { data ->
+            Inventory(
+                maxItems = data.inventory_max_items,
+                items = data.inventory.map { slot ->
+                    val item = items[Item.Name(slot.code)]!!
+                    ItemPack(
+                        item = Item.Details(
+                            value = item.code,
+                            level = item.level,
+                            type = ItemType.valueOf(item.type),
+                        ),
+                        quantity = slot.quantity,
+                    )
+                }.toSet()
+            )
+        }
+    }
 
     companion object {
 

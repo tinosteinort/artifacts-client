@@ -34,4 +34,6 @@ data class CharacterSchema(
     val utility2_slot: String,
     val utility2_slot_quantity: Int,
     val bag_slot: String,
+    val inventory_max_items: Int,
+    val inventory: Set<InventorySlot>,
 )

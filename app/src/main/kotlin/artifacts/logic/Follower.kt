@@ -7,6 +7,7 @@ import artifacts.business.common.Cooldown
 import artifacts.business.common.Name
 import artifacts.business.common.Position
 import artifacts.business.result.MoveResult
+import artifacts.business.util.GameException
 import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
 
@@ -16,8 +17,8 @@ class Follower(
     private val target: Name,
 ) : Behaviour {
 
-    override fun init() = when (core.init(figure.name)) {
-        is Outcome.Error -> throw RuntimeException("could not init ${figure.name}")
+    override fun init() = when (val result = core.init(figure.name)) {
+        is Outcome.Error -> throw GameException(result.value)
         is Outcome.Success -> {
             logger.info("init done for ${figure.name}")
         }
