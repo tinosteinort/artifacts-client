@@ -2,30 +2,21 @@ package artifacts.logic
 
 import artifacts.business.Behaviour
 import artifacts.business.Figure
-import artifacts.business.GameCore
+import artifacts.business.FigureStore
 import artifacts.business.common.Cooldown
 import artifacts.business.common.Name
 import artifacts.business.common.Position
 import artifacts.business.result.MoveResult
-import artifacts.business.util.GameException
 import artifacts.business.util.Loggers
-import artifacts.business.util.Outcome
 
 class Follower(
-    private val core: GameCore,
+    private val figureStore: FigureStore,
     private val figure: Figure,
     private val target: Name,
 ) : Behaviour {
 
-    override fun init() = when (val result = core.init(figure.name)) {
-        is Outcome.Error -> throw GameException(result.value)
-        is Outcome.Success -> {
-            logger.info("init done for ${figure.name}")
-        }
-    }
-
     override fun control(): Cooldown {
-        val targetPos = core.position(target)
+        val targetPos = figureStore[target].position
         if (figure.position() != targetPos) {
             return move(targetPos)
         }

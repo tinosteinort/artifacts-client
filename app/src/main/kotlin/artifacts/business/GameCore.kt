@@ -6,8 +6,8 @@ import artifacts.business.util.Outcome
 
 interface GameCore {
 
-    fun initItems(page: Int, pageSize: Int): Outcome<InitItemsResult, GameError>
-    fun init(name: Name): Outcome<InitResult, GameError>
+    fun getItems(page: Int, pageSize: Int): Outcome<GetItemsResult, GameError>
+    fun getFigures(): Outcome<GetFiguresResult, GameError>
 
     fun move(name: Name, position: Position): Outcome<MoveResult, GameError>
     fun fight(name: Name): Outcome<FightResult, GameError>
@@ -18,9 +18,4 @@ interface GameCore {
     fun unequip(name: Name, slot: Slot, quantity: Int): Outcome<UnequipResult, GameError>
     fun useItem(name: Name, item: Item, quantity: Int): Outcome<UseItemResult, GameError>
     fun giveItems(name: Name, target: Name, items: Set<ItemPack<Item.Name>>): Outcome<GiveItemsResult, GameError>
-
-    fun status(name: Name): Status
-    fun position(name: Name): Position
-    fun equipment(name: Name): Map<Slot, Equipment>
-    fun inventory(name: Name): Inventory
 }

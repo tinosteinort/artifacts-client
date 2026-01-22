@@ -9,19 +9,10 @@ import artifacts.business.common.Item
 import artifacts.business.result.RestResult
 import artifacts.business.result.UseItemResult
 import artifacts.business.util.Loggers
-import artifacts.business.util.Outcome
 
 class Fighter(
-    private val core: GameCore,
     private val figure: Figure,
 ) : Behaviour {
-
-    override fun init() = when (core.init(figure.name)) {
-        is Outcome.Error -> throw RuntimeException("could not init ${figure.name}")
-        is Outcome.Success -> {
-            logger.info("init done for ${figure.name}")
-        }
-    }
 
     override fun control(): Cooldown {
         if (needsHeal()) {
