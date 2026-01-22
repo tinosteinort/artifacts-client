@@ -32,13 +32,8 @@ class Follower(
         return Cooldown.NO_COOLDOWN
     }
 
-    private fun move(target: Position): Cooldown = when (val result = figure.move(target)) {
-        is Outcome.Error -> {
-            logger.error(result.value)
-            Cooldown.NO_COOLDOWN
-        }
-
-        is Outcome.Success -> when (result.value) {
+    private fun move(target: Position): Cooldown =
+        when (val result = figure.move(target)) {
             is MoveResult.AlreadyThere -> {
                 logger.info("${figure.name} is already there")
                 Cooldown.NO_COOLDOWN
@@ -66,10 +61,9 @@ class Follower(
 
             is MoveResult.Success -> {
                 logger.info("${figure.name} move done")
-                result.value.cooldown
+                result.cooldown
             }
         }
-    }
 
     companion object {
         val logger = Loggers.getLogger(Follower::class.java)
