@@ -1,5 +1,6 @@
 package artifacts.business
 
+import artifacts.business.common.FigureData
 import artifacts.business.common.Item
 import artifacts.business.common.Name
 import artifacts.business.result.GetFiguresResult
@@ -16,7 +17,7 @@ class Game(private val core: GameCore) {
     private val figures: MutableMap<Name, Figure> = mutableMapOf()
     private val autoControllers: MutableMap<Name, AutoController> = mutableMapOf()
     private val items: MutableMap<Item.Name, Item.Details> = mutableMapOf()
-    private val figureStore: FigureStore = FigureStore(items)
+    private val gameData: GameData = GameData(items)
 
     var running: Boolean = false
         private set
@@ -55,23 +56,27 @@ class Game(private val core: GameCore) {
 
     private fun initFigures() {
         logger.info("load figures")
+        val allFigureData = loadFigures()
+        allFigureData.forEach { figureData ->
+            logger.info("register ${figureData.name}")
+            gameData.updateFigure(figureData.name, figureData)
+            figures[figureData.name] = Figure(
+                core = core,
+                name = figureData.name,
+                gameData = gameData,
+            )
+        }
+    }
+
+    private fun loadFigures(): Set<FigureData> =
         when (val result = core.getFigures()) {
             is Outcome.Error -> throw GameException(result.value)
             is Outcome.Success -> when (result.value) {
                 is GetFiguresResult.Success -> {
-                    result.value.figures.forEach { figureData ->
-                        logger.info("register ${figureData.name}")
-                        figureStore[figureData.name] = figureData
-                        figures[figureData.name] = Figure(
-                            core = core,
-                            name = figureData.name,
-                            figureStore = figureStore,
-                        )
-                    }
+                    return result.value.figures
                 }
             }
         }
-    }
 
     private fun initItems() {
         logger.info("load items")
@@ -102,12 +107,12 @@ class Game(private val core: GameCore) {
         }
     }
 
-    fun autoControl(name: Name, factory: (figureStore: FigureStore, figure: Figure) -> Behaviour) {
+    fun autoControl(name: Name, factory: (gameData: GameData, figure: Figure) -> Behaviour) {
         executor.execute {
             autoControllers.remove(name)
 
             val figure = figures[name]!!
-            val behaviour = factory(figureStore, figure)
+            val behaviour = factory(gameData, figure)
 
             autoControllers[name] = AutoController(
                 figure = figure,

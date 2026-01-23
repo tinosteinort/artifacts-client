@@ -8,12 +8,12 @@ import artifacts.business.util.Outcome
 class Figure(
     private val core: GameCore,
     val name: Name,
-    private val figureStore: FigureStore,
+    private val gameData: GameData,
 ) {
-    fun status(): Status = figureStore[name].status
-    fun inventory(): Inventory = figureStore[name].inventory
-    fun position(): Position = figureStore[name].position
-    fun equipment(): Map<Slot, Equipment> = figureStore[name].equipment
+    fun status() = gameData.figure(name).status
+    fun inventory() = gameData.figure(name).inventory
+    fun position() = gameData.figure(name).position
+    fun equipment() = gameData.figure(name).equipment
 
     fun move(position: Position): MoveResult =
         when (val result = core.move(name, position)) {

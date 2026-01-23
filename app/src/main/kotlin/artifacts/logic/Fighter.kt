@@ -2,7 +2,6 @@ package artifacts.logic
 
 import artifacts.business.Behaviour
 import artifacts.business.Figure
-import artifacts.business.GameCore
 import artifacts.business.common.Cooldown
 import artifacts.business.common.Inventory
 import artifacts.business.common.Item
@@ -29,12 +28,16 @@ class Fighter(
 
     private fun heal(): Cooldown =
         when (val method = detectHealingMethod()) {
-            is HealingMethod.WithItem -> useItem(method.item, method.quantity)
+            is HealingMethod.WithItem -> with(method) {
+                useItem(item, quantity)
+            }
+
             is HealingMethod.WithoutItem -> rest()
         }
 
     private fun detectHealingMethod(): HealingMethod {
         val inventory: Inventory = figure.inventory()
+        inventory.items.first()
 
         return HealingMethod.WithoutItem()
     }

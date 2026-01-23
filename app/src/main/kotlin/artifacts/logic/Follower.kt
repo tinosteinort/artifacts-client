@@ -2,7 +2,7 @@ package artifacts.logic
 
 import artifacts.business.Behaviour
 import artifacts.business.Figure
-import artifacts.business.FigureStore
+import artifacts.business.GameData
 import artifacts.business.common.Cooldown
 import artifacts.business.common.Name
 import artifacts.business.common.Position
@@ -10,13 +10,13 @@ import artifacts.business.result.MoveResult
 import artifacts.business.util.Loggers
 
 class Follower(
-    private val figureStore: FigureStore,
+    private val gameData: GameData,
     private val figure: Figure,
     private val target: Name,
 ) : Behaviour {
 
     override fun control(): Cooldown {
-        val targetPos = figureStore[target].position
+        val targetPos = gameData.figure(target).position
         if (figure.position() != targetPos) {
             return move(targetPos)
         }
