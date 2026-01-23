@@ -12,7 +12,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-class ArtifactsGameCore(
+class ArtifactsGameCore private constructor(
     private val httpClient: HttpClient,
     private val artifactsApiUrl: String,
     private val authToken: String
@@ -26,18 +26,48 @@ class ArtifactsGameCore(
      * Data of all characters is stored here. This will be updated on every action
      * of the characters. So it is possible to ask this class for up-to-date
      * information of the character, without doing a request everytime it is needed.
-     *
-     * The init method is needed, if the data is expected, before any action is
-     * executed. Because of this, the AutoController calls it at the start.
      */
     private val characters: MutableMap<Name, CharacterSchema> = mutableMapOf()
-    private val items: MutableMap<Item.Name, ItemSchema> = mutableMapOf()
+    private val items: MutableMap<Item.Name, Item.Details> = mutableMapOf()
 
     private fun updateCharacterData(data: CharacterSchema) {
         characters[Name(data.name)] = data
     }
 
-    override fun getItems(page: Int, pageSize: Int): Outcome<GetItemsResult, GameError> {
+    fun fetchItems(): Outcome<FetchItemResult, GameError> {
+        logger.info("load items")
+        var page = 1
+        var pages: Int?
+
+        do {
+            when (val result = getItemPage(page, ITEM_PAGE_SIZE)) {
+                is Outcome.Error -> {
+                    return Outcome.error(result.value)
+                }
+
+                is Outcome.Success -> when (result.value) {
+                    is Page -> {
+                        items.putAll(
+                            result.value.items.map { item ->
+                                Item.Name(item.code) to Item.Details(
+                                    value = item.code,
+                                    level = item.level,
+                                    type = ItemType.fromCode(item.type),
+                                )
+                            }.toMap()
+                        )
+                        page = result.value.page + 1
+                        pages = result.value.pages
+                    }
+                }
+            }
+        } while (page != pages + 1)
+
+        logger.info("found ${items.size} items")
+        return Outcome.success(FetchItemResult())
+    }
+
+    private fun getItemPage(page: Int, pageSize: Int): Outcome<Page<ItemSchema>, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/items?page=$page&size=$pageSize"))
             .configureHeaders()
@@ -51,14 +81,8 @@ class ArtifactsGameCore(
                 val itemsData = json.decodeFromString<GetAllItemsResponseDto>(response.body())
 
                 Outcome.success(
-                    GetItemsResult.Success(
-                        items = itemsData.data.map { data ->
-                            Item.Name(data.code) to Item.Details(
-                                value = data.code,
-                                level = data.level,
-                                type = ItemType.fromCode(data.type),
-                            )
-                        }.toMap(),
+                    Page(
+                        items = itemsData.data,
                         total = itemsData.total,
                         page = itemsData.page,
                         pageSize = pageSize,
@@ -71,7 +95,7 @@ class ArtifactsGameCore(
         }
     }
 
-    override fun getFigures(): Outcome<GetFiguresResult, GameError> {
+    private fun fetchFigures(): Outcome<FetchFiguresResult, GameError> {
         val request = HttpRequest
             .newBuilder(URI("$artifactsApiUrl/my/characters"))
             .configureHeaders()
@@ -83,67 +107,71 @@ class ArtifactsGameCore(
         return when (response.statusCode()) {
             200 -> {
                 val characterData = json.decodeFromString<GetCharactersResponseDto>(response.body())
+                characterData.data.forEach { data -> updateCharacterData(data) }
 
-                Outcome.success(
-                    GetFiguresResult.Success(
-                        figures = characterData.data.map { data ->
-                            FigureData(
-                                name = Name(data.name),
-                                status = Status(
-                                    level = data.level,
-                                    xp = data.xp,
-                                    maxXp = data.max_xp,
-                                    gold = data.gold,
-                                    hp = data.hp,
-                                    maxHp = data.max_hp,
-                                ),
-                                position = Position(data.x, data.y),
-                                inventory = Inventory(
-                                    maxItems = data.inventory_max_items,
-                                    items = data.inventory.map { slot ->
-                                        //val item = items[Item.Name(slot.code)]!!
-                                        ItemPack(
-                                            item = Item.Name(
-                                                value = slot.code,
-                                                //         level = item.level,
-                                                //         type = ItemType.valueOf(item.type),
-                                            ),
-                                            quantity = slot.quantity,
-                                        )
-                                    }.toSet()
-                                ),
-                                equipment = mapOf(
-                                    Slot.WEAPON to Equipment(Item.Name(data.weapon_slot), 1),
-                                    Slot.SHIELD to Equipment(Item.Name(data.shield_slot), 1),
-                                    Slot.HELMET to Equipment(Item.Name(data.helmet_slot), 1),
-                                    Slot.BODY_ARMOR to Equipment(Item.Name(data.body_armor_slot), 1),
-                                    Slot.LEG_ARMOR to Equipment(Item.Name(data.leg_armor_slot), 1),
-                                    Slot.BOOTS to Equipment(Item.Name(data.boots_slot), 1),
-                                    Slot.RING1 to Equipment(Item.Name(data.ring1_slot), 1),
-                                    Slot.RING2 to Equipment(Item.Name(data.ring2_slot), 1),
-                                    Slot.AMULET to Equipment(Item.Name(data.amulet_slot), 1),
-                                    Slot.ARTIFACT1 to Equipment(Item.Name(data.artifact1_slot), 1),
-                                    Slot.ARTIFACT2 to Equipment(Item.Name(data.artifact2_slot), 1),
-                                    Slot.ARTIFACT3 to Equipment(Item.Name(data.artifact3_slot), 1),
-                                    Slot.UTILITY1 to Equipment(
-                                        item = Item.Name(data.utility1_slot),
-                                        quantity = data.utility1_slot_quantity
-                                    ),
-                                    Slot.UTILITY2 to Equipment(
-                                        item = Item.Name(data.utility2_slot),
-                                        quantity = data.utility2_slot_quantity
-                                    ),
-                                    Slot.BAG to Equipment(Item.Name(data.bag_slot), 1),
-                                )
-                            )
-                        }.toSet()
-                    )
-                )
+                Outcome.success(FetchFiguresResult())
             }
 
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
+
+    override fun item(item: Item.Name): Item.Details =
+        items[item]!!
+
+    override fun figure(name: Name): FigureData =
+        characters[name]!!.toFigureData(items)
+
+    private fun CharacterSchema.toFigureData(items: Map<Item.Name, Item.Details>) =
+        FigureData(
+            name = Name(name),
+            status = Status(
+                level = level,
+                xp = xp,
+                maxXp = max_xp,
+                gold = gold,
+                hp = hp,
+                maxHp = max_hp,
+            ),
+            position = Position(x, y),
+            inventory = Inventory(
+                maxItems = inventory_max_items,
+                items = inventory
+                    .filterNot { slot -> slot.code.isEmpty() }
+                    .map { slot ->
+                        ItemPack(
+                            item = items[Item.Name(slot.code)]!!,
+                            quantity = slot.quantity,
+                        )
+                    }.toSet()
+            ),
+            equipment = mapOf(
+                Slot.WEAPON to Equipment(Item.Name(weapon_slot), 1),
+                Slot.SHIELD to Equipment(Item.Name(shield_slot), 1),
+                Slot.HELMET to Equipment(Item.Name(helmet_slot), 1),
+                Slot.BODY_ARMOR to Equipment(Item.Name(body_armor_slot), 1),
+                Slot.LEG_ARMOR to Equipment(Item.Name(leg_armor_slot), 1),
+                Slot.BOOTS to Equipment(Item.Name(boots_slot), 1),
+                Slot.RING1 to Equipment(Item.Name(ring1_slot), 1),
+                Slot.RING2 to Equipment(Item.Name(ring2_slot), 1),
+                Slot.AMULET to Equipment(Item.Name(amulet_slot), 1),
+                Slot.ARTIFACT1 to Equipment(Item.Name(artifact1_slot), 1),
+                Slot.ARTIFACT2 to Equipment(Item.Name(artifact2_slot), 1),
+                Slot.ARTIFACT3 to Equipment(Item.Name(artifact3_slot), 1),
+                Slot.UTILITY1 to Equipment(
+                    item = Item.Name(utility1_slot),
+                    quantity = utility1_slot_quantity
+                ),
+                Slot.UTILITY2 to Equipment(
+                    item = Item.Name(utility2_slot),
+                    quantity = utility2_slot_quantity
+                ),
+                Slot.BAG to Equipment(Item.Name(bag_slot), 1),
+            )
+        )
+
+    override fun figureNames(): Set<Name> =
+        characters.keys.toSet()
 
     override fun move(name: Name, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest
@@ -549,5 +577,31 @@ class ArtifactsGameCore(
     companion object {
 
         private val logger = Loggers.getLogger(ArtifactsGameCore::class.java)
+
+        private val ITEM_PAGE_SIZE = 100
+
+        fun create(
+            httpClient: HttpClient,
+            artifactsApiUrl: String,
+            authToken: String,
+        ): Outcome<ArtifactsGameCore, GameError> {
+            val core = ArtifactsGameCore(
+                httpClient = httpClient,
+                artifactsApiUrl = artifactsApiUrl,
+                authToken = authToken
+            )
+
+            when (val result = core.fetchItems()) {
+                is Outcome.Error -> return Outcome.error(result.value)
+                is Outcome.Success -> {}
+            }
+
+            when (val result = core.fetchFigures()) {
+                is Outcome.Error -> return Outcome.error(result.value)
+                is Outcome.Success -> {}
+            }
+
+            return Outcome.success(core)
+        }
     }
 }

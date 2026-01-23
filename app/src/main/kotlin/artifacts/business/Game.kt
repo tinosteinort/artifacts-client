@@ -1,23 +1,16 @@
 package artifacts.business
 
-import artifacts.business.common.FigureData
-import artifacts.business.common.Item
 import artifacts.business.common.Name
-import artifacts.business.result.GetFiguresResult
-import artifacts.business.result.GetItemsResult
-import artifacts.business.util.GameException
 import artifacts.business.util.Loggers
-import artifacts.business.util.Outcome
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class Game(private val core: GameCore) {
 
     private val executor: ExecutorService = Executors.newFixedThreadPool(1)
+
     private val figures: MutableMap<Name, Figure> = mutableMapOf()
     private val autoControllers: MutableMap<Name, AutoController> = mutableMapOf()
-    private val items: MutableMap<Item.Name, Item.Details> = mutableMapOf()
-    private val gameData: GameData = GameData(items)
 
     var running: Boolean = false
         private set
@@ -28,9 +21,7 @@ class Game(private val core: GameCore) {
         Thread.sleep(1000)
 
         if (running) {
-            executor.execute {
-                run()
-            }
+            executor.execute(::run)
         }
     }
 
@@ -46,56 +37,22 @@ class Game(private val core: GameCore) {
         }
         executor.execute {
             running = true
-            initItems()
             initFigures()
-            executor.execute {
-                run()
-            }
+            executor.execute(::run)
         }
     }
 
-    private fun initFigures() {
-        logger.info("load figures")
-        val allFigureData = loadFigures()
-        allFigureData.forEach { figureData ->
-            logger.info("register ${figureData.name}")
-            gameData.updateFigure(figureData.name, figureData)
-            figures[figureData.name] = Figure(
-                core = core,
-                name = figureData.name,
-                gameData = gameData,
-            )
-        }
-    }
-
-    private fun loadFigures(): Set<FigureData> =
-        when (val result = core.getFigures()) {
-            is Outcome.Error -> throw GameException(result.value)
-            is Outcome.Success -> when (result.value) {
-                is GetFiguresResult.Success -> {
-                    return result.value.figures
-                }
-            }
-        }
-
-    private fun initItems() {
-        logger.info("load items")
-        var page = 1
-        var pages: Int?
-
-        do {
-            when (val result = core.getItems(page, 100)) {
-                is Outcome.Error -> throw GameException(result.value)
-                is Outcome.Success -> when (result.value) {
-                    is GetItemsResult.Success -> {
-                        items.putAll(result.value.items)
-                        page = result.value.page + 1
-                        pages = result.value.pages
-                    }
-                }
-            }
-        } while (page != pages + 1)
-    }
+    private fun initFigures(): Unit =
+        figures.putAll(
+            core.figureNames()
+                .map { name ->
+                    logger.info("register ${name}")
+                    name to Figure(
+                        core = core,
+                        name = name,
+                    )
+                }.toSet()
+        )
 
     fun stop() {
         if (!running) {
@@ -107,12 +64,12 @@ class Game(private val core: GameCore) {
         }
     }
 
-    fun autoControl(name: Name, factory: (gameData: GameData, figure: Figure) -> Behaviour) {
+    fun autoControl(name: Name, factory: (core: GameCore, figure: Figure) -> Behaviour) {
         executor.execute {
             autoControllers.remove(name)
 
             val figure = figures[name]!!
-            val behaviour = factory(gameData, figure)
+            val behaviour = factory(core, figure)
 
             autoControllers[name] = AutoController(
                 figure = figure,

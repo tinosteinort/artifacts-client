@@ -71,8 +71,8 @@ class CliAdapter(private val game: Game) {
                 "give item" -> giveItem(name)
                 "follow" -> {
                     val target = readName()
-                    game.autoControl(name) { figureStore, figure ->
-                        Follower(figureStore, figure, target)
+                    game.autoControl(name) { core, figure ->
+                        Follower(core, figure, target)
                     }
                 }
 

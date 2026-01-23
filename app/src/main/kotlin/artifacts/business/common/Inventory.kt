@@ -2,5 +2,5 @@ package artifacts.business.common
 
 data class Inventory(
     val maxItems: Int,
-    val items: Set<ItemPack<Item.Name>>
+    val items: Set<ItemPack<Item.Details>>
 )

@@ -6,8 +6,9 @@ import artifacts.business.util.Outcome
 
 interface GameCore {
 
-    fun getItems(page: Int, pageSize: Int): Outcome<GetItemsResult, GameError>
-    fun getFigures(): Outcome<GetFiguresResult, GameError>
+    fun item(item: Item.Name): Item.Details
+    fun figure(name: Name): FigureData
+    fun figureNames(): Set<Name>
 
     fun move(name: Name, position: Position): Outcome<MoveResult, GameError>
     fun fight(name: Name): Outcome<FightResult, GameError>
