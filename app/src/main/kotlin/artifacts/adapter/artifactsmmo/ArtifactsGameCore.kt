@@ -29,96 +29,11 @@ class ArtifactsGameCore private constructor(
      */
     private val characters: MutableMap<Name, FigureData> = mutableMapOf()
     private val items: MutableMap<Item.Name, Item.Details> = mutableMapOf()
+    private val maps: MutableMap<Position, MapDetails> = mutableMapOf()
 
     private fun updateCharacterData(data: CharacterSchema) {
         characters[Name(data.name)] = data.toFigureData(items)
     }
-
-    fun fetchItems(): Outcome<FetchItemResult, GameError> {
-        logger.info("load items")
-        var page = 1
-        var pages: Int?
-
-        do {
-            when (val result = getItemPage(page, ITEM_PAGE_SIZE)) {
-                is Outcome.Error -> {
-                    return Outcome.error(result.value)
-                }
-
-                is Outcome.Success -> when (result.value) {
-                    is Page -> {
-                        items.putAll(
-                            result.value.items.map { item ->
-                                Item.Name(item.code) to Item.Details(
-                                    value = item.code,
-                                    level = item.level,
-                                    type = ItemType.fromCode(item.type),
-                                )
-                            }.toMap()
-                        )
-                        page = result.value.page + 1
-                        pages = result.value.pages
-                    }
-                }
-            }
-        } while (page != pages + 1)
-
-        logger.info("found ${items.size} items")
-        return Outcome.success(FetchItemResult())
-    }
-
-    private fun getItemPage(page: Int, pageSize: Int): Outcome<Page<ItemSchema>, GameError> {
-        val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/items?page=$page&size=$pageSize"))
-            .configureHeaders()
-            .GET()
-            .build()
-
-        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-
-        return when (response.statusCode()) {
-            200 -> {
-                val itemsData = json.decodeFromString<GetAllItemsResponseDto>(response.body())
-
-                Outcome.success(
-                    Page(
-                        items = itemsData.data,
-                        total = itemsData.total,
-                        page = itemsData.page,
-                        pageSize = pageSize,
-                        pages = itemsData.pages
-                    )
-                )
-            }
-
-            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-        }
-    }
-
-    private fun fetchFigures(): Outcome<FetchFiguresResult, GameError> {
-        val request = HttpRequest
-            .newBuilder(URI("$artifactsApiUrl/my/characters"))
-            .configureHeaders()
-            .GET()
-            .build()
-
-        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-
-        return when (response.statusCode()) {
-            200 -> {
-                val characterData = json.decodeFromString<GetCharactersResponseDto>(response.body())
-                characterData.data.forEach { data -> updateCharacterData(data) }
-
-                Outcome.success(FetchFiguresResult())
-            }
-
-            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-        }
-    }
-
-    override fun item(item: Item.Name): Item.Details = items[item]!!
-
-    override fun figure(name: Name): FigureData = characters[name]!!
 
     private fun CharacterSchema.toFigureData(items: Map<Item.Name, Item.Details>) =
         FigureData(
@@ -168,8 +83,158 @@ class ArtifactsGameCore private constructor(
             )
         )
 
-    override fun figureNames(): Set<Name> =
-        characters.keys.toSet()
+    fun fetchItems(): Outcome<FetchItemsResult, GameError> {
+        logger.info("load items")
+        var page = 1
+        var pages: Int?
+
+        do {
+            when (val result = getItemPage(page, ITEMS_PAGE_SIZE)) {
+                is Outcome.Error -> {
+                    return Outcome.error(result.value)
+                }
+
+                is Outcome.Success -> when (result.value) {
+                    is Page -> {
+                        items.putAll(
+                            result.value.data.map { item ->
+                                Item.Name(item.code) to Item.Details(
+                                    value = item.code,
+                                    level = item.level,
+                                    type = ItemType.fromCode(item.type),
+                                )
+                            }.toMap()
+                        )
+                        page = result.value.page + 1
+                        pages = result.value.pages
+                    }
+                }
+            }
+        } while (page != pages + 1)
+
+        logger.info("found ${items.size} items")
+        return Outcome.success(FetchItemsResult())
+    }
+
+    private fun getItemPage(page: Int, pageSize: Int): Outcome<Page<ItemSchema>, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/items?page=$page&size=$pageSize"))
+            .configureHeaders()
+            .GET()
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val itemsData = json.decodeFromString<GetItemsResponseDto>(response.body())
+
+                Outcome.success(
+                    Page(
+                        data = itemsData.data,
+                        total = itemsData.total,
+                        page = itemsData.page,
+                        pageSize = pageSize,
+                        pages = itemsData.pages
+                    )
+                )
+            }
+
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    fun fetchMaps(): Outcome<FetchMapsResult, GameError> {
+        logger.info("load maps")
+        var page = 1
+        var pages: Int?
+
+        do {
+            when (val result = getMapPage(page, MAPS_PAGE_SIZE)) {
+                is Outcome.Error -> {
+                    return Outcome.error(result.value)
+                }
+
+                is Outcome.Success -> when (result.value) {
+                    is Page -> {
+                        maps.putAll(
+                            result.value.data.map { map ->
+                                val position = Position(map.x, map.y)
+                                position to MapDetails(
+                                    position = position,
+                                    name = map.name,
+                                )
+                            }.toMap()
+                        )
+                        page = result.value.page + 1
+                        pages = result.value.pages
+                    }
+                }
+            }
+        } while (page != pages + 1)
+
+        logger.info("found ${maps.size} maps")
+        return Outcome.success(FetchMapsResult())
+    }
+
+    private fun getMapPage(page: Int, pageSize: Int): Outcome<Page<MapSchema>, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/maps?page=$page&size=$pageSize"))
+            .configureHeaders()
+            .GET()
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val mapsData = json.decodeFromString<GetMapsResponseDto>(response.body())
+
+                Outcome.success(
+                    Page(
+                        data = mapsData.data,
+                        total = mapsData.total,
+                        page = mapsData.page,
+                        pageSize = pageSize,
+                        pages = mapsData.pages
+                    )
+                )
+            }
+
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    private fun fetchFigures(): Outcome<FetchFiguresResult, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/my/characters"))
+            .configureHeaders()
+            .GET()
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val characterData = json.decodeFromString<GetCharactersResponseDto>(response.body())
+                characterData.data.forEach { data -> updateCharacterData(data) }
+
+                Outcome.success(FetchFiguresResult())
+            }
+
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    override fun item(item: Item.Name): Item.Details = items[item]!!
+
+    override fun figure(name: Name): FigureData = characters[name]!!
+
+    override fun figureNames(): Set<Name> = characters.keys.toSet()
+
+    override fun maps(): Set<MapDetails> = maps.values.toSet()
+
+    override fun map(position: Position): MapDetails = maps[position]!!
 
     override fun move(name: Name, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest
@@ -576,7 +641,8 @@ class ArtifactsGameCore private constructor(
 
         private val logger = Loggers.getLogger(ArtifactsGameCore::class.java)
 
-        private val ITEM_PAGE_SIZE = 100
+        private val ITEMS_PAGE_SIZE = 100
+        private val MAPS_PAGE_SIZE = 100
 
         fun create(
             httpClient: HttpClient,
@@ -590,6 +656,11 @@ class ArtifactsGameCore private constructor(
             )
 
             when (val result = core.fetchItems()) {
+                is Outcome.Error -> return Outcome.error(result.value)
+                is Outcome.Success -> {}
+            }
+
+            when (val result = core.fetchMaps()) {
                 is Outcome.Error -> return Outcome.error(result.value)
                 is Outcome.Success -> {}
             }

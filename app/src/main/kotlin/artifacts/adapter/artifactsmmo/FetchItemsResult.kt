@@ -1,3 +1,3 @@
 package artifacts.adapter.artifactsmmo
 
-class FetchItemResult
+class FetchItemsResult

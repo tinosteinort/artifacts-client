@@ -9,6 +9,8 @@ interface GameCore {
     fun item(item: Item.Name): Item.Details
     fun figure(name: Name): FigureData
     fun figureNames(): Set<Name>
+    fun maps(): Set<MapDetails>
+    fun map(position: Position): MapDetails
 
     fun move(name: Name, position: Position): Outcome<MoveResult, GameError>
     fun fight(name: Name): Outcome<FightResult, GameError>

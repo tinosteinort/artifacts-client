@@ -1,7 +1,7 @@
 package artifacts.adapter.artifactsmmo
 
 class Page<T>(
-    val items: Set<T>,
+    val data: Set<T>,
     val total: Int,
     val page: Int,
     val pageSize: Int,

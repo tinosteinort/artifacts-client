@@ -3,7 +3,7 @@ package artifacts.adapter.artifactsmmo.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class GetAllItemsResponseDto(
+data class GetItemsResponseDto(
     val data: Set<ItemSchema>,
     val total: Int,
     val page: Int,
