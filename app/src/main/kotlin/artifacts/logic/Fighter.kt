@@ -3,34 +3,34 @@ package artifacts.logic
 import artifacts.business.Behaviour
 import artifacts.business.DefaultActions
 import artifacts.business.Figure
-import artifacts.business.common.Cooldown
-import artifacts.business.common.FigureData
-import artifacts.business.common.Inventory
-import artifacts.business.common.Position
+import artifacts.business.GameCore
+import artifacts.business.common.*
 import artifacts.business.util.Loggers
 
 class Fighter(
+    private val core: GameCore,
     private val figure: Figure,
-    private val positionOfMonster: Position,
+    private val monster: Monster,
 ) : Behaviour {
 
-    private lateinit var figureData: FigureData
-
     override fun control(): Cooldown {
-        figureData = figure.data()
         if (needsHeal()) {
             return heal()
         }
 
-        if (positionOfMonster != figureData.position) {
-            return DefaultActions.move(logger, figure, positionOfMonster)
-        }
+        findMonster(monster)
+            ?.let { positionOfMonster ->
+                if (positionOfMonster != figure.data().position) {
+                    return DefaultActions.move(logger, figure, positionOfMonster)
+                }
+            }
+            ?: return Cooldown.NO_COOLDOWN
 
         return DefaultActions.fight(logger, figure)
     }
 
     private fun needsHeal(): Boolean =
-        with(figureData.status) {
+        with(figure.data().status) {
             hp < maxHp
         }
 
@@ -44,14 +44,15 @@ class Fighter(
         }
 
     private fun detectHealingMethod(): HealingMethod {
+        val figureData = figure.data()
         val inventory: Inventory = figureData.inventory
 
         val hp = figureData.status.hp
         val maxHp = figureData.status.maxHp
 
-        val cookedChicken = inventory.items.filter { itemPack ->
+        val cookedChicken = inventory.items.firstOrNull { itemPack ->
             itemPack.item.value == "cooked_chicken"
-        }.firstOrNull()
+        }
         if (cookedChicken != null
             && cookedChicken.quantity > 0
             && (hp / maxHp) <= 0.7
@@ -61,6 +62,12 @@ class Fighter(
 
         return HealingMethod.WithoutItem()
     }
+
+    private fun findMonster(monster: Monster): Position? =
+        core.maps()
+            .filter { map -> map.content?.type == ContentType.MONSTER }
+            .firstOrNull { map -> map.content!!.code == monster.value }
+            ?.position
 
     companion object {
         val logger = Loggers.getLogger(Fighter::class.java)

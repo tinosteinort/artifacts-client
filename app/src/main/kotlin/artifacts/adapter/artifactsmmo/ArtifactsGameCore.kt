@@ -158,13 +158,24 @@ class ArtifactsGameCore private constructor(
                 is Outcome.Success -> when (result.value) {
                     is Page -> {
                         maps.putAll(
-                            result.value.data.map { map ->
-                                val position = Position(map.x, map.y)
+                            result.value.data.associate { map ->
+                                val position = Position(
+                                    x = map.x,
+                                    y = map.y,
+                                    layer = MapLayer.fromValue(map.layer)
+                                )
                                 position to MapDetails(
                                     position = position,
                                     name = map.name,
+                                    skin = map.skin,
+                                    content = map.interactions.content?.let { content ->
+                                        MapContent(
+                                            type = ContentType.fromType(content.type),
+                                            code = content.code,
+                                        )
+                                    }
                                 )
-                            }.toMap()
+                            }
                         )
                         page = result.value.page + 1
                         pages = result.value.pages

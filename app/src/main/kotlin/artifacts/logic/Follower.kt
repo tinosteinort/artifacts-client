@@ -15,9 +15,8 @@ class Follower(
 ) : Behaviour {
 
     override fun control(): Cooldown {
-        val data = figure.data()
         val targetPos = core.figure(target).position
-        if (data.position != targetPos) {
+        if (figure.data().position != targetPos) {
             return DefaultActions.move(logger, figure, targetPos)
         }
         return Cooldown.NO_COOLDOWN

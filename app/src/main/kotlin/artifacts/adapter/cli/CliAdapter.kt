@@ -140,9 +140,9 @@ class CliAdapter(private val game: Game) {
                 }
 
                 "fighter" -> {
-                    val position = readPosition()
-                    game.autoControl(name) { _, figure ->
-                        Fighter(figure, position)
+                    val monster = readMonster()
+                    game.autoControl(name) { core, figure ->
+                        Fighter(core, figure, monster)
                     }
                 }
 
