@@ -9,10 +9,7 @@ class Figure(
     private val core: GameCore,
     val name: Name,
 ) {
-    fun status() = core.figure(name).status
-    fun inventory() = core.figure(name).inventory
-    fun position() = core.figure(name).position
-    fun equipment() = core.figure(name).equipment
+    fun data() = core.figure(name)
 
     fun move(position: Position): MoveResult =
         when (val result = core.move(name, position)) {

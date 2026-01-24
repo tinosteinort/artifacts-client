@@ -19,6 +19,11 @@ class CliAdapter(private val game: Game) {
         return Name(readln())
     }
 
+    private fun readMonster(): Monster {
+        print("name > ")
+        return Monster(readln())
+    }
+
     private fun readPosition(): Position {
         print("position > ")
         return readln()
@@ -77,7 +82,10 @@ class CliAdapter(private val game: Game) {
                 }
 
                 "fighter" -> {
-                    game.autoControl(name) { _, figure -> Fighter(figure) }
+                    val position = readPosition()
+                    game.autoControl(name) { _, figure ->
+                        Fighter(figure, position)
+                    }
                 }
 
                 "auto off" -> game.autoControlOff(name)
@@ -132,13 +140,17 @@ class CliAdapter(private val game: Game) {
 
     private fun gather(name: Name) {
         game.control(name) { figure ->
-            when (figure.gather()) {
+            when (val result = figure.gather()) {
                 is GatherResult.CharacterIsBusy -> logger.info("$name is busy")
                 is GatherResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
                 is GatherResult.InventoryFull -> logger.info("inventory of $name is full")
                 is GatherResult.NoResourceOnMap -> logger.info("$name: no resource on map")
                 is GatherResult.SkillLevelTooLow -> logger.info("gathering skill level of $name too low")
-                is GatherResult.Success -> logger.info("$name gathered")
+                is GatherResult.Success -> {
+                    result.items.forEach { (item, quantity) ->
+                        logger.info("$name gathered ${quantity}x $item")
+                    }
+                }
             }
         }
     }
