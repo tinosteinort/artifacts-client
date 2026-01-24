@@ -102,6 +102,17 @@ class ArtifactsGameCore private constructor(
                                     value = item.code,
                                     level = item.level,
                                     type = ItemType.fromCode(item.type),
+                                    craftInfo = item.craft?.let {
+                                        CraftInfo(
+                                            requiredLevel = it.level,
+                                            neededItems = it.items.map { neededItem ->
+                                                ItemPack(
+                                                    item = Item.Name(neededItem.code),
+                                                    quantity = neededItem.quantity,
+                                                )
+                                            }.toSet()
+                                        )
+                                    }
                                 )
                             }.toMap()
                         )

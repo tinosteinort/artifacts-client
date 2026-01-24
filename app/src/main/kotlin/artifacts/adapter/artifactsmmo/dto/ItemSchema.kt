@@ -10,4 +10,5 @@ data class ItemSchema(
     val type: String,
     val subtype: String,
     val description: String,
+    val craft: CraftSchema?,
 )
