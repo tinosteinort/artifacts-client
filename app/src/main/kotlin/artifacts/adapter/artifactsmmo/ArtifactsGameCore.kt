@@ -27,11 +27,11 @@ class ArtifactsGameCore private constructor(
      * of the characters. So it is possible to ask this class for up-to-date
      * information of the character, without doing a request everytime it is needed.
      */
-    private val characters: MutableMap<Name, CharacterSchema> = mutableMapOf()
+    private val characters: MutableMap<Name, FigureData> = mutableMapOf()
     private val items: MutableMap<Item.Name, Item.Details> = mutableMapOf()
 
     private fun updateCharacterData(data: CharacterSchema) {
-        characters[Name(data.name)] = data
+        characters[Name(data.name)] = data.toFigureData(items)
     }
 
     fun fetchItems(): Outcome<FetchItemResult, GameError> {
@@ -116,11 +116,9 @@ class ArtifactsGameCore private constructor(
         }
     }
 
-    override fun item(item: Item.Name): Item.Details =
-        items[item]!!
+    override fun item(item: Item.Name): Item.Details = items[item]!!
 
-    override fun figure(name: Name): FigureData =
-        characters[name]!!.toFigureData(items)
+    override fun figure(name: Name): FigureData = characters[name]!!
 
     private fun CharacterSchema.toFigureData(items: Map<Item.Name, Item.Details>) =
         FigureData(
