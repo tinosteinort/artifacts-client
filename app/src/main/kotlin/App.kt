@@ -1,7 +1,6 @@
 import artifacts.adapter.artifactsmmo.ArtifactsGameCore
 import artifacts.adapter.cli.CliAdapter
 import artifacts.business.Game
-import artifacts.business.common.Name
 import artifacts.business.util.GameException
 import artifacts.business.util.Outcome
 import java.net.http.HttpClient
@@ -16,7 +15,7 @@ fun main() {
         authToken = System.getenv("API_TOKEN")
     )
 
-    when(coreResult) {
+    when (coreResult) {
         is Outcome.Error -> throw GameException(coreResult.value)
         is Outcome.Success -> {}
     }

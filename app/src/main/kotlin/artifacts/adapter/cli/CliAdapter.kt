@@ -1,8 +1,8 @@
 package artifacts.adapter.cli
 
+import artifacts.business.DefaultActions
 import artifacts.business.Game
 import artifacts.business.common.*
-import artifacts.business.result.*
 import artifacts.business.util.Loggers
 import artifacts.logic.Fighter
 import artifacts.logic.Follower
@@ -65,15 +65,73 @@ class CliAdapter(private val game: Game) {
                 }
 
                 "figure" -> name = readName()
-                "move" -> move(name)
-                "fight" -> fight(name)
-                "rest" -> rest(name)
-                "gather" -> gather(name)
-                "craft" -> craft(name)
-                "equip" -> equip(name)
-                "unequip" -> unequip(name)
-                "use item" -> useItem(name)
-                "give item" -> giveItem(name)
+
+                "move" -> {
+                    val position = readPosition()
+                    game.control(name) { figure ->
+                        DefaultActions.move(logger, figure, position)
+                    }
+                }
+
+                "fight" -> {
+                    game.control(name) { figure ->
+                        DefaultActions.fight(logger, figure)
+                    }
+                }
+
+                "rest" -> {
+                    game.control(name) { figure ->
+                        DefaultActions.rest(logger, figure)
+                    }
+                }
+
+                "gather" -> {
+                    game.control(name) { figure ->
+                        DefaultActions.gather(logger, figure)
+                    }
+                }
+
+                "craft" -> {
+                    val item = readItem()
+                    game.control(name) { figure ->
+                        DefaultActions.craft(logger, figure, item, 1)
+                    }
+                }
+
+                "equip" -> {
+                    val item = readItem()
+                    val slot = readSlot()
+                    val quantity = readQuantity()
+                    game.control(name) { figure ->
+                        DefaultActions.equip(logger, figure, item, slot, quantity)
+                    }
+                }
+
+                "unequip" -> {
+                    val slot = readSlot()
+                    val quantity = readQuantity()
+                    game.control(name) { figure ->
+                        DefaultActions.unequip(logger, figure, slot, quantity)
+                    }
+                }
+
+                "use item" -> {
+                    val item = readItem()
+                    val quantity = readQuantity()
+                    game.control(name) { figure ->
+                        DefaultActions.useItem(logger, figure, item, quantity)
+                    }
+                }
+
+                "give item" -> {
+                    val target = readName()
+                    val item = readItem()
+                    val quantity = readQuantity()
+                    game.control(name) { figure ->
+                        DefaultActions.giveItem(logger, figure, target, item, quantity)
+                    }
+                }
+
                 "follow" -> {
                     val target = readName()
                     game.autoControl(name) { core, figure ->
@@ -92,152 +150,6 @@ class CliAdapter(private val game: Game) {
                 else -> println("unknown command")
             }
         } while (game.running)
-    }
-
-    private fun move(name: Name) {
-        val position = readPosition()
-        game.control(name) { figure ->
-            when (figure.move(position)) {
-                is MoveResult.AlreadyThere -> logger.info("$name is already there")
-                is MoveResult.CharacterIsBusy -> logger.info("$name is busy")
-                is MoveResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is MoveResult.ConditionsNotMet -> logger.info("$name does not match conditions")
-                is MoveResult.MapIsBlocked -> logger.info("map is blocked")
-                is MoveResult.Success -> logger.info("$name move done")
-            }
-        }
-    }
-
-    private fun fight(name: Name) {
-        game.control(name) { figure ->
-            when (val result = figure.fight()) {
-                is FightResult.FightEnded -> {
-                    if (result.win) {
-                        logger.info("$name won the fight against ${result.opponent}")
-                    } else {
-                        logger.info("$name lost the fight against ${result.opponent}")
-                    }
-                }
-
-                is FightResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is FightResult.InventoryFull -> logger.info("inventory of $name is full")
-                is FightResult.NoMonsterOnMap -> logger.info("$name cannot fight, no monster on map")
-                is FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters ->
-                    logger.info("$name: only boss monster can be fought by multiple characters")
-            }
-        }
-    }
-
-    private fun rest(name: Name) {
-        game.control(name) { figure ->
-            when (figure.rest()) {
-                is RestResult.CharacterIsBusy -> logger.info("$name is busy")
-                is RestResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is RestResult.Success -> logger.info("$name did a rest")
-            }
-        }
-    }
-
-    private fun gather(name: Name) {
-        game.control(name) { figure ->
-            when (val result = figure.gather()) {
-                is GatherResult.CharacterIsBusy -> logger.info("$name is busy")
-                is GatherResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is GatherResult.InventoryFull -> logger.info("inventory of $name is full")
-                is GatherResult.NoResourceOnMap -> logger.info("$name: no resource on map")
-                is GatherResult.SkillLevelTooLow -> logger.info("gathering skill level of $name too low")
-                is GatherResult.Success -> {
-                    result.items.forEach { (item, quantity) ->
-                        logger.info("$name gathered ${quantity}x $item")
-                    }
-                }
-            }
-        }
-    }
-
-    private fun craft(name: Name) {
-        val item = readItem()
-        game.control(name) { figure ->
-            when (val result = figure.craft(item, 1)) {
-                is CraftResult.CharacterIsBusy -> logger.info("$name is busy")
-                is CraftResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is CraftResult.CraftNotFound -> logger.info("$name: craft not found")
-                is CraftResult.InventoryFull -> logger.info("inventory of $name is full")
-                is CraftResult.MissingRequiredItems -> logger.info("$name is missing items")
-                is CraftResult.SkillLevelTooLow -> logger.info("crafting skill level of $name too low")
-                is CraftResult.Success -> logger.info("$name crafted ${result.items.size} items")
-            }
-        }
-    }
-
-    private fun equip(name: Name) {
-        val item = readItem()
-        val slot = readSlot()
-        val quantity = readQuantity()
-        game.control(name) { figure ->
-            when (figure.equip(item, slot, quantity)) {
-                is EquipResult.CharacterIsBusy -> logger.info("$name is busy")
-                is EquipResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is EquipResult.ConditionsNotMet -> logger.info("$name does not match conditions")
-                is EquipResult.InventoryFull -> logger.info("inventory of $name is full")
-                is EquipResult.ItemIsAlreadyEquipped -> logger.info("$name is already epuiped")
-                is EquipResult.ItemNotFound -> logger.info("$name: item not found")
-                is EquipResult.MissingRequiredItems -> logger.info("$name is missing items")
-                is EquipResult.NotEnoughHp -> logger.info("$name has not enough Hp")
-                is EquipResult.SlotNotEmpty -> logger.info("$name: slot is not empty")
-                is EquipResult.Success -> logger.info("$name was equipeed")
-                is EquipResult.TooManyUtilities -> logger.info("$name: too many utilities")
-            }
-        }
-    }
-
-    private fun unequip(name: Name) {
-        val slot = readSlot()
-        val quantity = readQuantity()
-        game.control(name) { figure ->
-            when (figure.unequip(slot, quantity)) {
-                is UnequipResult.CharacterIsBusy -> logger.info("$name is busy")
-                is UnequipResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is UnequipResult.InventoryFull -> logger.info("inventory of $name is full")
-                is UnequipResult.ItemNotFound -> logger.info("$name: item not found")
-                is UnequipResult.MissingRequiredItems -> logger.info("$name is missing items")
-                is UnequipResult.NotEnoughHp -> logger.info("$name has not enough Hp")
-                is UnequipResult.SlotNotEquipped -> logger.info("$name: slot is not equipped")
-                is UnequipResult.Success -> logger.info("$name unequipped $slot")
-            }
-        }
-    }
-
-    private fun useItem(name: Name) {
-        val item = readItem()
-        val quantity = readQuantity()
-        game.control(name) { figure ->
-            when (val result = figure.useItem(item, quantity)) {
-                is UseItemResult.CharacterIsBusy -> logger.info("$name is busy")
-                is UseItemResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is UseItemResult.ConditionsNotMet -> logger.info("$name does not match conditions")
-                is UseItemResult.ItemIsNotConsumable -> logger.info("$name: item '${result.item}' is not consumable")
-                is UseItemResult.ItemNotFound -> logger.info("$name: item not found")
-                is UseItemResult.MissingRequiredItems -> logger.info("$name is missing items")
-                is UseItemResult.Success -> logger.info("item used")
-            }
-        }
-    }
-
-    private fun giveItem(name: Name) {
-        val target = readName()
-        val item = readItem()
-        val quantity = readQuantity()
-        game.control(name) { figure ->
-            when (figure.giveItems(target, setOf(ItemPack(item, quantity)))) {
-                is GiveItemsResult.CharacterIsBusy -> logger.info("$name is busy")
-                is GiveItemsResult.CharacterIsInCooldown -> logger.info("$name is in cooldown")
-                is GiveItemsResult.ItemNotFound -> logger.info("$name: item not found")
-                is GiveItemsResult.InventoryFull -> logger.info("inventory of $name is full")
-                is GiveItemsResult.MissingRequiredItems -> logger.info("$name is missing items")
-                is GiveItemsResult.Success -> logger.info("give item successful")
-            }
-        }
     }
 
     companion object {

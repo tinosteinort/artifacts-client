@@ -1,12 +1,11 @@
 package artifacts.logic
 
 import artifacts.business.Behaviour
+import artifacts.business.DefaultActions
 import artifacts.business.Figure
 import artifacts.business.GameCore
 import artifacts.business.common.Cooldown
 import artifacts.business.common.Name
-import artifacts.business.common.Position
-import artifacts.business.result.MoveResult
 import artifacts.business.util.Loggers
 
 class Follower(
@@ -19,43 +18,10 @@ class Follower(
         val data = figure.data()
         val targetPos = core.figure(target).position
         if (data.position != targetPos) {
-            return move(targetPos)
+            return DefaultActions.move(logger, figure, targetPos)
         }
         return Cooldown.NO_COOLDOWN
     }
-
-    private fun move(target: Position): Cooldown =
-        when (val result = figure.move(target)) {
-            is MoveResult.AlreadyThere -> {
-                logger.info("${figure.name} is already there")
-                Cooldown.NO_COOLDOWN
-            }
-
-            is MoveResult.CharacterIsBusy -> {
-                logger.info("${figure.name} is busy")
-                Cooldown.NO_COOLDOWN
-            }
-
-            is MoveResult.CharacterIsInCooldown -> {
-                logger.info("${figure.name} is in cooldown")
-                Cooldown.NO_COOLDOWN
-            }
-
-            is MoveResult.ConditionsNotMet -> {
-                logger.info("${figure.name} does not match conditions")
-                Cooldown.NO_COOLDOWN
-            }
-
-            is MoveResult.MapIsBlocked -> {
-                logger.info("map is blocked")
-                Cooldown.NO_COOLDOWN
-            }
-
-            is MoveResult.Success -> {
-                logger.info("${figure.name} move done")
-                result.cooldown
-            }
-        }
 
     companion object {
         val logger = Loggers.getLogger(Follower::class.java)
