@@ -15,8 +15,6 @@ class Crafter(
 
     override fun control(): Cooldown {
 
-        //val target: Item.Details = core.item(item)
-
         // copper_dagger
         val craftInfo = core.craftInfo(item)
         if (craftInfo == null) {
@@ -24,16 +22,10 @@ class Crafter(
             return Cooldown.NO_COOLDOWN
         }
 
-        val missingItem: Item.Name? = getMissingItem(craftInfo)
         // copper_bar 6x
+        val missingItem: Item.Name? = getMissingItem(craftInfo)
         if (missingItem == null) {
-
-            val workshopPosition = getWorkShopFor(craftInfo.requiredSkill)
-            if (workshopPosition != figure.data().position) {
-                return DefaultActions.move(logger, figure, workshopPosition)
-            }
-
-            return DefaultActions.craft(logger, figure, item, 1)
+            return craft(craftInfo)
         } else {
 
             val craftInfoOfMissingItem = core.craftInfo(missingItem)
@@ -43,46 +35,41 @@ class Crafter(
             }
 
             // copper_ore 10x
-            val missingItem = getMissingItem(craftInfoOfMissingItem)
+            val missingItem: Item.Name? = getMissingItem(craftInfoOfMissingItem)
             if (missingItem == null) {
-                val workshopPosition = getWorkShopFor(craftInfo.requiredSkill)
-
-                if (workshopPosition != figure.data().position) {
-                    return DefaultActions.move(logger, figure, workshopPosition)
-                }
-
-                return DefaultActions.craft(logger, figure, item, 1)
+                return craft(craftInfo)
             } else {
 
-                TODO("copper_ores werden von copper_rocks gedropped")
-                val missingResourceLocation: Position? = core.maps()
-                    .asSequence()
-                    .filterNot { map -> map.content == null }
-                    .filter { map -> map.content!!.type == ContentType.RESOURCE }
-                    .filter { map -> map.content!!.code == missingItem.value }
-                    .map { map -> map.position }
-                    .firstOrNull()
-
-                if (missingResourceLocation == null) {
+                val position: Position? = positionOf(missingItem)
+                if (position == null) {
                     logger.info("${figure.name}: cannot find location where to get $item")
                     return Cooldown.NO_COOLDOWN
                 }
 
-                if (figure.data().position != missingResourceLocation) {
-                    return DefaultActions.move(logger, figure, missingResourceLocation)
-                }
-
-                return DefaultActions.gather(logger, figure)
-
+                return gather(position)
             }
+        }
+    }
 
+    private fun craft(craft: CraftInfo) : Cooldown {
+        val workshopPosition = getWorkShopFor(craft.requiredSkill)
+        if (workshopPosition != figure.data().position) {
+            return DefaultActions.move(logger, figure, workshopPosition)
         }
 
+        return DefaultActions.craft(logger, figure, item, 1)
+    }
 
+    private fun gather(position: Position): Cooldown {
+        if (figure.data().position != position) {
+            return DefaultActions.move(logger, figure, position)
+        }
+
+        return DefaultActions.gather(logger, figure)
     }
 
     private fun getMissingItem(craftInfo: CraftInfo): Item.Name? {
-        val itemToRequired: Map<Item.Name, Boolean> = craftInfo.neededItems.map { neededItem ->
+        val itemToRequired: Map<Item.Name, Boolean> = craftInfo.neededItems.associate { neededItem ->
             val inventoryItemPak = figure.data().inventory.items.firstOrNull {
                 it.item.value == neededItem.item.value
             }
@@ -91,23 +78,12 @@ class Crafter(
             } else {
                 neededItem.item to (inventoryItemPak.quantity < neededItem.quantity)
             }
-        }.toMap()
+        }
 
         return itemToRequired
             .filter { it.value }
             .map { it.key }
             .firstOrNull()
-        //val requiredItems: Set<Item.Name> = craftInfo
-        //    .neededItems
-        //    .map { it.item }
-        //    .toSet()
-//
-        //val inventoryItems = figure.data().inventory
-        //    .items
-        //    .map { Item.Name(it.item.value) }
-        //    .toSet()
-//
-        //return (requiredItems - inventoryItems).firstOrNull()
     }
 
     private fun getWorkShopFor(skill: Skill): Position = when (skill) {
@@ -118,6 +94,23 @@ class Crafter(
         Skill.WOODCUTTING -> TODO("define position for $skill")
         Skill.MINING -> Position(1, 5)
         Skill.ALCHEMY -> TODO("define position for $skill")
+    }
+
+    private fun positionOf(missingItem: Item.Name): Position? {
+
+        //TODO("copper_ores werden von copper_rocks gedropped")
+        // map hat resource (copper_rocks)
+        //  resource dropt item (copper_ore)
+
+        val missingResourceLocation: Position? = core.maps()
+            .asSequence()
+            .filterNot { map -> map.content == null }
+            .filter { map -> map.content!!.type == ContentType.RESOURCE }
+            // der code enhällt den Code der Resource, die das Item dropt
+            .filter { map -> map.content!!.code == missingItem.value }
+            .map { map -> map.position }
+            .firstOrNull()
+        return missingResourceLocation
     }
 
     companion object {

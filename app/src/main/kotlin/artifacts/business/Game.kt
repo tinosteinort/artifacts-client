@@ -35,9 +35,10 @@ class Game(private val core: GameCore) {
         if (running) {
             return
         }
+        running = true
+        initFigures()
+
         executor.execute {
-            running = true
-            initFigures()
             executor.execute(::run)
         }
     }
@@ -46,7 +47,7 @@ class Game(private val core: GameCore) {
         figures.putAll(
             core.figureNames()
                 .map { name ->
-                    logger.info("register ${name}")
+                    logger.info("register $name")
                     name to Figure(
                         core = core,
                         name = name,

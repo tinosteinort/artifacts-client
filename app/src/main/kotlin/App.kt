@@ -9,19 +9,19 @@ class App
 
 fun main() {
 
-    val coreResult = ArtifactsGameCore.create(
+    val core = ArtifactsGameCore.create(
         httpClient = HttpClient.newHttpClient(),
         artifactsApiUrl = "https://api.artifactsmmo.com",
         authToken = System.getenv("API_TOKEN")
     )
 
-    when (coreResult) {
-        is Outcome.Error -> throw GameException(coreResult.value)
-        is Outcome.Success -> {}
+    when (core) {
+        is Outcome.Error -> throw GameException(core.value)
+        is Outcome.Success -> {
+            val game = Game(core.value)
+            game.start()
+
+            CliAdapter(game).run()
+        }
     }
-
-    val game = Game(coreResult.value)
-    game.start()
-
-    CliAdapter(game).run()
 }
