@@ -11,6 +11,7 @@ interface GameCore {
     fun figureNames(): Set<Name>
     fun maps(): Set<MapDetails>
     fun map(position: Position): MapDetails
+    fun craftInfo(item: Item.Name): CraftInfo?
 
     fun move(name: Name, position: Position): Outcome<MoveResult, GameError>
     fun fight(name: Name): Outcome<FightResult, GameError>

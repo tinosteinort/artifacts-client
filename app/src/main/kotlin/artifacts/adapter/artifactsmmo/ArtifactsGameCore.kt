@@ -29,6 +29,7 @@ class ArtifactsGameCore private constructor(
      */
     private val characters: MutableMap<Name, FigureData> = mutableMapOf()
     private val items: MutableMap<Item.Name, Item.Details> = mutableMapOf()
+    private val craftInfos: MutableMap<Item.Name, CraftInfo> = mutableMapOf()
     private val maps: MutableMap<Position, MapDetails> = mutableMapOf()
 
     private fun updateCharacterData(data: CharacterSchema) {
@@ -102,9 +103,19 @@ class ArtifactsGameCore private constructor(
                                     value = item.code,
                                     level = item.level,
                                     type = ItemType.fromCode(item.type),
-                                    craftInfo = item.craft?.let {
+                                )
+                            }.toMap()
+                        )
+                        craftInfos.putAll(
+                            result.value.data
+                                .filterNot { item -> item.craft == null }
+                                .associate { item ->
+                                    val itemName = Item.Name(item.code)
+                                    itemName to item.craft!!.let {
                                         CraftInfo(
+                                            item = itemName,
                                             requiredLevel = it.level,
+                                            requiredSkill = Skill.fromValue(it.skill),
                                             neededItems = it.items.map { neededItem ->
                                                 ItemPack(
                                                     item = Item.Name(neededItem.code),
@@ -113,8 +124,7 @@ class ArtifactsGameCore private constructor(
                                             }.toSet()
                                         )
                                     }
-                                )
-                            }.toMap()
+                                }
                         )
                         page = result.value.page + 1
                         pages = result.value.pages
@@ -257,6 +267,8 @@ class ArtifactsGameCore private constructor(
     override fun maps(): Set<MapDetails> = maps.values.toSet()
 
     override fun map(position: Position): MapDetails = maps[position]!!
+
+    override fun craftInfo(item: Item.Name): CraftInfo? = craftInfos[item]
 
     override fun move(name: Name, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest

@@ -4,6 +4,7 @@ import artifacts.business.DefaultActions
 import artifacts.business.Game
 import artifacts.business.common.*
 import artifacts.business.util.Loggers
+import artifacts.logic.Crafter
 import artifacts.logic.Fighter
 import artifacts.logic.Follower
 
@@ -143,6 +144,13 @@ class CliAdapter(private val game: Game) {
                     val monster = readMonster()
                     game.autoControl(name) { core, figure ->
                         Fighter(core, figure, monster)
+                    }
+                }
+
+                "crafter" -> {
+                    val item = readItem()
+                    game.autoControl(name) { core, figure ->
+                        Crafter(core, figure, item)
                     }
                 }
 

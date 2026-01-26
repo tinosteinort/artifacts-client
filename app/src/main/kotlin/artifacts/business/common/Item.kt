@@ -7,9 +7,8 @@ sealed class Item(val value: String) {
 
     class Details(
         value: String,
-        level: Int,
-        type: ItemType,
-        craftInfo: CraftInfo?,
+        val level: Int,
+        val type: ItemType,
     ) : Item(value)
 
     override fun toString() = value
