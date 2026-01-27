@@ -10,6 +10,10 @@ class Logger(private val cls: Class<*>) {
         println("Info[${cls.simpleName}]: $message")
     }
 
+    fun error(message: String) {
+        println("Error[${cls.simpleName}]: $message")
+    }
+
     fun error(error: GameError) {
         val message = when (error) {
             is GameError.CharacterNotFound -> "${error.javaClass.simpleName}"

@@ -1,13 +1,15 @@
 package artifacts.business
 
 import artifacts.business.common.Name
+import artifacts.business.util.GameThreadFactory
 import artifacts.business.util.Loggers
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class Game(private val core: GameCore) {
 
-    private val executor: ExecutorService = Executors.newFixedThreadPool(1)
+    private val executor: ExecutorService = Executors
+        .newFixedThreadPool(1, GameThreadFactory(this))
 
     private val figures: MutableMap<Name, Figure> = mutableMapOf()
     private val autoControllers: MutableMap<Name, AutoController> = mutableMapOf()
@@ -36,6 +38,7 @@ class Game(private val core: GameCore) {
             return
         }
         running = true
+
         initFigures()
 
         executor.execute(::run)
@@ -57,8 +60,9 @@ class Game(private val core: GameCore) {
         if (!running) {
             return
         }
+        running = false
+
         executor.execute {
-            running = false
             executor.shutdown()
         }
     }
