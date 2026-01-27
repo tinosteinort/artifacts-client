@@ -51,7 +51,7 @@ class Fighter(
         val maxHp = figureData.status.maxHp
 
         val cookedChicken = inventory.items.firstOrNull { itemPack ->
-            itemPack.item.value == "cooked_chicken"
+            itemPack.item.name == "cooked_chicken"
         }
         if (cookedChicken != null
             && cookedChicken.quantity > 0

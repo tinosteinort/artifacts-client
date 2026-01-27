@@ -38,9 +38,7 @@ class Game(private val core: GameCore) {
         running = true
         initFigures()
 
-        executor.execute {
-            executor.execute(::run)
-        }
+        executor.execute(::run)
     }
 
     private fun initFigures(): Unit =

@@ -1,22 +1,23 @@
 package artifacts.business.common
 
 
-sealed class Item(val name: String) {
+sealed class Resource(val name: String) {
 
-    class Name(name: String) : Item(name)
+    class Name(name: String) : Resource(name)
 
     class Details(
         name: String,
         val level: Int,
-        val type: ItemType,
-    ) : Item(name)
+        val skill: ResourceSkill,
+        val drops: Set<Item.Name>,
+    ) : Resource(name)
 
     override fun toString() = name
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Item
+        other as Resource
 
         return name == other.name
     }

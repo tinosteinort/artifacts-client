@@ -7,6 +7,7 @@ import artifacts.business.util.Outcome
 interface GameCore {
 
     fun item(item: Item.Name): Item.Details
+    fun resources(): Set<Resource.Details>
     fun figure(name: Name): FigureData
     fun figureNames(): Set<Name>
     fun maps(): Set<MapDetails>

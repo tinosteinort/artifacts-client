@@ -15,14 +15,12 @@ class Crafter(
 
     override fun control(): Cooldown {
 
-        // copper_dagger
         val craftInfo = core.craftInfo(item)
         if (craftInfo == null) {
-            logger.info("${figure.name}: item $item no craftable")
+            logger.info("${figure.name}: item $item not craftable")
             return Cooldown.NO_COOLDOWN
         }
 
-        // copper_bar 6x
         val missingItem: Item.Name? = getMissingItem(craftInfo)
         if (missingItem == null) {
             return craft(craftInfo)
@@ -30,19 +28,18 @@ class Crafter(
 
             val craftInfoOfMissingItem = core.craftInfo(missingItem)
             if (craftInfoOfMissingItem == null) {
-                logger.info("${figure.name}: item $item no craftable")
+                logger.info("${figure.name}: item $item not craftable")
                 return Cooldown.NO_COOLDOWN
             }
 
-            // copper_ore 10x
             val missingItem: Item.Name? = getMissingItem(craftInfoOfMissingItem)
             if (missingItem == null) {
-                return craft(craftInfo)
+                return craft(craftInfoOfMissingItem)
             } else {
 
                 val position: Position? = positionOf(missingItem)
                 if (position == null) {
-                    logger.info("${figure.name}: cannot find location where to get $item")
+                    logger.info("${figure.name}: cannot find map where to get $item")
                     return Cooldown.NO_COOLDOWN
                 }
 
@@ -57,7 +54,7 @@ class Crafter(
             return DefaultActions.move(logger, figure, workshopPosition)
         }
 
-        return DefaultActions.craft(logger, figure, item, 1)
+        return DefaultActions.craft(logger, figure, craft.item, 1)
     }
 
     private fun gather(position: Position): Cooldown {
@@ -71,7 +68,7 @@ class Crafter(
     private fun getMissingItem(craftInfo: CraftInfo): Item.Name? {
         val itemToRequired: Map<Item.Name, Boolean> = craftInfo.neededItems.associate { neededItem ->
             val inventoryItemPak = figure.data().inventory.items.firstOrNull {
-                it.item.value == neededItem.item.value
+                it.item.name == neededItem.item.name
             }
             if (inventoryItemPak == null) {
                 neededItem.item to true
@@ -96,22 +93,28 @@ class Crafter(
         Skill.ALCHEMY -> TODO("define position for $skill")
     }
 
-    private fun positionOf(missingItem: Item.Name): Position? {
+    private fun positionOf(item: Item.Name): Position? {
 
-        //TODO("copper_ores werden von copper_rocks gedropped")
-        // map hat resource (copper_rocks)
-        //  resource dropt item (copper_ore)
+        val resource: Resource? = findResourceDropping(item)
 
-        val missingResourceLocation: Position? = core.maps()
+        if (resource == null) {
+            logger.info("${figure.name}: no resource found that drops $item")
+            return null
+        }
+
+        val mapWithResource: Position? = core.maps()
             .asSequence()
             .filterNot { map -> map.content == null }
             .filter { map -> map.content!!.type == ContentType.RESOURCE }
-            // der code enhällt den Code der Resource, die das Item dropt
-            .filter { map -> map.content!!.code == missingItem.value }
+            .filter { map -> map.content!!.code == resource.name }
             .map { map -> map.position }
             .firstOrNull()
-        return missingResourceLocation
+        return mapWithResource
     }
+
+    private fun findResourceDropping(item: Item.Name): Resource? =
+        core.resources()
+            .firstOrNull { resource -> resource.drops.contains(item) }
 
     companion object {
         val logger = Loggers.getLogger(Crafter::class.java)

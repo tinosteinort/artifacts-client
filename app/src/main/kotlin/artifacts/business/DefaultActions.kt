@@ -194,6 +194,10 @@ object DefaultActions {
                 Cooldown.NO_COOLDOWN
             }
 
+            is CraftResult.NoWorkshopOnMap -> {
+                logger.info("${figure.name}: no workshop on map}")
+                Cooldown.NO_COOLDOWN
+            }
             is CraftResult.Success -> {
                 logger.info("${figure.name} crafted ${result.items.size} items}")
                 result.cooldown

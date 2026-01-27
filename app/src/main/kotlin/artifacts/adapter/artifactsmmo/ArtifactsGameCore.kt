@@ -31,6 +31,7 @@ class ArtifactsGameCore private constructor(
     private val items: MutableMap<Item.Name, Item.Details> = mutableMapOf()
     private val craftInfos: MutableMap<Item.Name, CraftInfo> = mutableMapOf()
     private val maps: MutableMap<Position, MapDetails> = mutableMapOf()
+    private val resources: MutableMap<Resource.Name, Resource.Details> = mutableMapOf()
 
     private fun updateCharacterData(data: CharacterSchema) {
         characters[Name(data.name)] = data.toFigureData(items)
@@ -100,7 +101,7 @@ class ArtifactsGameCore private constructor(
                         items.putAll(
                             result.value.data.map { item ->
                                 Item.Name(item.code) to Item.Details(
-                                    value = item.code,
+                                    name = item.code,
                                     level = item.level,
                                     type = ItemType.fromCode(item.type),
                                 )
@@ -157,6 +158,70 @@ class ArtifactsGameCore private constructor(
                         page = itemsData.page,
                         pageSize = pageSize,
                         pages = itemsData.pages
+                    )
+                )
+            }
+
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
+    fun fetchResources(): Outcome<FetchResourcesResult, GameError> {
+        logger.info("load resources")
+        var page = 1
+        var pages: Int?
+
+        do {
+            when (val result = getResourcePage(page, RESOURCES_PAGE_SIZE)) {
+                is Outcome.Error -> {
+                    return Outcome.error(result.value)
+                }
+
+                is Outcome.Success -> when (result.value) {
+                    is Page -> {
+                        resources.putAll(
+                            result.value.data.associate { resource ->
+                                Resource.Name(resource.code) to Resource.Details(
+                                    name = resource.code,
+                                    level = resource.level,
+                                    skill = ResourceSkill.fromValue(resource.skill),
+                                    drops = resource.drops.map { drop ->
+                                        Item.Name(drop.code)
+                                    }.toSet()
+                                )
+                            }
+                        )
+                        page = result.value.page + 1
+                        pages = result.value.pages
+                    }
+                }
+            }
+        } while (page != pages + 1)
+
+        logger.info("found ${resources.size} resources")
+        return Outcome.success(FetchResourcesResult())
+    }
+
+    private fun getResourcePage(page: Int, pageSize: Int): Outcome<Page<ResourceSchema>, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/resources?page=$page&size=$pageSize"))
+            .configureHeaders()
+            .GET()
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val resourcesData = json.decodeFromString<GetResourcesResponseDto>(response.body())
+
+                Outcome.success(
+                    Page(
+                        data = resourcesData.data,
+                        total = resourcesData.total,
+                        page = resourcesData.page,
+                        pageSize = pageSize,
+                        pages = resourcesData.pages
                     )
                 )
             }
@@ -259,6 +324,8 @@ class ArtifactsGameCore private constructor(
     }
 
     override fun item(item: Item.Name): Item.Details = items[item]!!
+
+    override fun resources(): Set<Resource.Details> = resources.values.toSet()
 
     override fun figure(name: Name): FigureData = characters[name]!!
 
@@ -399,7 +466,7 @@ class ArtifactsGameCore private constructor(
                 HttpRequest.BodyPublishers.ofString(
                     """
                     {
-                      "code": "${item.value}",
+                      "code": "${item.name}",
                       "quantity": $quantity
                     }    
                     """.trimIndent()
@@ -438,6 +505,7 @@ class ArtifactsGameCore private constructor(
             497 -> Outcome.success(CraftResult.InventoryFull())
             498 -> Outcome.error(GameError.CharacterNotFound())
             499 -> Outcome.success(CraftResult.CharacterIsInCooldown())
+            598 -> Outcome.success(CraftResult.NoWorkshopOnMap())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
@@ -481,7 +549,7 @@ class ArtifactsGameCore private constructor(
                 HttpRequest.BodyPublishers.ofString(
                     """
                     {
-                      "code": "${item.value}",
+                      "code": "${item.name}",
                       "slot": "${slot.value}",
                       "quantity": $quantity
                     }    
@@ -575,7 +643,7 @@ class ArtifactsGameCore private constructor(
                 HttpRequest.BodyPublishers.ofString(
                     """
                     {
-                      "code": "${item.value}",
+                      "code": "${item.name}",
                       "quantity": $quantity
                     }
                     """.trimIndent()
@@ -625,7 +693,7 @@ class ArtifactsGameCore private constructor(
                         GiveItemsRequestDto(
                             items = items.map { itemPack ->
                                 SimpleItemSchema(
-                                    code = itemPack.item.value,
+                                    code = itemPack.item.name,
                                     quantity = itemPack.quantity,
                                 )
                             }.toSet(),
@@ -676,6 +744,7 @@ class ArtifactsGameCore private constructor(
         private val logger = Loggers.getLogger(ArtifactsGameCore::class.java)
 
         private val ITEMS_PAGE_SIZE = 100
+        private val RESOURCES_PAGE_SIZE = 100
         private val MAPS_PAGE_SIZE = 100
 
         fun create(
@@ -690,6 +759,11 @@ class ArtifactsGameCore private constructor(
             )
 
             when (val result = core.fetchItems()) {
+                is Outcome.Error -> return Outcome.error(result.value)
+                is Outcome.Success -> {}
+            }
+
+            when (val result = core.fetchResources()) {
                 is Outcome.Error -> return Outcome.error(result.value)
                 is Outcome.Success -> {}
             }

@@ -17,4 +17,5 @@ sealed class CraftResult {
     class SkillLevelTooLow : CraftResult()
     class InventoryFull : CraftResult()
     class CharacterIsInCooldown : CraftResult()
+    class NoWorkshopOnMap : CraftResult()
 }
