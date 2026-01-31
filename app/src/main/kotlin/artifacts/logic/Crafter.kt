@@ -13,12 +13,16 @@ class Crafter(
     private val item: Item.Name
 ) : Behaviour {
 
+    private var errorOccurred: Boolean = false
+
     override fun control(): Cooldown {
+        if (errorOccurred) {
+            return Cooldown.NO_COOLDOWN
+        }
 
         val craftInfo = core.craftInfo(item)
         if (craftInfo == null) {
-            logger.info("${figure.name}: item $item not craftable")
-            return Cooldown.NO_COOLDOWN
+            return failed("item $item not craftable")
         }
 
         val missingItem: Item.Name? = getMissingItem(craftInfo)
@@ -28,8 +32,12 @@ class Crafter(
 
             val craftInfoOfMissingItem = core.craftInfo(missingItem)
             if (craftInfoOfMissingItem == null) {
-                logger.info("${figure.name}: item $item not craftable")
-                return Cooldown.NO_COOLDOWN
+                val position: Position? = positionOf(missingItem)
+                if (position == null) {
+                    return failed("cannot find map where to get $item")
+                }
+
+                return gatherOrFight(position)
             }
 
             val missingItem: Item.Name? = getMissingItem(craftInfoOfMissingItem)
@@ -39,16 +47,21 @@ class Crafter(
 
                 val position: Position? = positionOf(missingItem)
                 if (position == null) {
-                    logger.info("${figure.name}: cannot find map where to get $item")
-                    return Cooldown.NO_COOLDOWN
+                    return failed("cannot find map where to get $item")
                 }
 
-                return gather(position)
+                return gatherOrFight(position)
             }
         }
     }
 
-    private fun craft(craft: CraftInfo) : Cooldown {
+    private fun failed(message: String) : Cooldown {
+        errorOccurred = true
+        logger.error("${figure.name}: task failed: $message")
+        return Cooldown.NO_COOLDOWN
+    }
+
+    private fun craft(craft: CraftInfo): Cooldown {
         val workshopPosition = getWorkShopFor(craft.requiredSkill)
         if (workshopPosition != figure.data().position) {
             return DefaultActions.move(logger, figure, workshopPosition)
@@ -57,23 +70,32 @@ class Crafter(
         return DefaultActions.craft(logger, figure, craft.item, 1)
     }
 
-    private fun gather(position: Position): Cooldown {
+    private fun gatherOrFight(position: Position): Cooldown {
         if (figure.data().position != position) {
             return DefaultActions.move(logger, figure, position)
         }
 
-        return DefaultActions.gather(logger, figure)
+        val map = core.map(position)
+        return when (map.content?.type) {
+            ContentType.MONSTER -> DefaultActions.fight(logger, figure)
+            ContentType.RESOURCE -> DefaultActions.gather(logger, figure)
+            else -> {
+                failed("nothing to fight or to gather")
+            }
+        }
     }
 
     private fun getMissingItem(craftInfo: CraftInfo): Item.Name? {
+        // method: inventory.getFirstMissingItem(craftInfo)
+        // or:  TODO craftInfo.getMissingItem(inventory)
         val itemToRequired: Map<Item.Name, Boolean> = craftInfo.neededItems.associate { neededItem ->
-            val inventoryItemPak = figure.data().inventory.items.firstOrNull {
+            val inventoryItemPack = figure.data().inventory.items.firstOrNull {
                 it.item.name == neededItem.item.name
             }
-            if (inventoryItemPak == null) {
+            if (inventoryItemPack == null) {
                 neededItem.item to true
             } else {
-                neededItem.item to (inventoryItemPak.quantity < neededItem.quantity)
+                neededItem.item to (inventoryItemPack.quantity < neededItem.quantity)
             }
         }
 
@@ -86,7 +108,7 @@ class Crafter(
     private fun getWorkShopFor(skill: Skill): Position = when (skill) {
         Skill.WEAPONCRAFTING -> Position(2, 1)
         Skill.GEARCRAFTING -> Position(3, 1)
-        Skill.JEWELRYCRAFTING -> TODO("define position for $skill")
+        Skill.JEWELRYCRAFTING -> Position(1, 3)
         Skill.COOKING -> Position(1, 1)
         Skill.WOODCUTTING -> TODO("define position for $skill")
         Skill.MINING -> Position(1, 5)
@@ -96,9 +118,10 @@ class Crafter(
     private fun positionOf(item: Item.Name): Position? {
 
         val resource: Resource? = findResourceDropping(item)
-
         if (resource == null) {
             logger.info("${figure.name}: no resource found that drops $item")
+
+            // TODO find monster that drops item
             return null
         }
 
