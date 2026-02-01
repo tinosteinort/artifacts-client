@@ -5,6 +5,7 @@ import artifacts.business.DefaultActions
 import artifacts.business.Figure
 import artifacts.business.GameCore
 import artifacts.business.common.*
+import artifacts.business.result.CraftResult
 import artifacts.business.util.Loggers
 
 class Crafter(
@@ -14,9 +15,13 @@ class Crafter(
 ) : Behaviour {
 
     private var errorOccurred: Boolean = false
+    private var itemCrafted: Boolean = false
 
     override fun control(): Cooldown {
         if (errorOccurred) {
+            return Cooldown.NO_COOLDOWN
+        }
+        if (itemCrafted) {
             return Cooldown.NO_COOLDOWN
         }
 
@@ -24,7 +29,6 @@ class Crafter(
         if (craftInfo == null) {
             return failed("item $item not craftable")
         }
-
         val missingItem: Item.Name? = getMissingItem(craftInfo)
         if (missingItem == null) {
             return craft(craftInfo)
@@ -55,7 +59,7 @@ class Crafter(
         }
     }
 
-    private fun failed(message: String) : Cooldown {
+    private fun failed(message: String): Cooldown {
         errorOccurred = true
         logger.error("${figure.name}: task failed: $message")
         return Cooldown.NO_COOLDOWN
@@ -67,7 +71,49 @@ class Crafter(
             return DefaultActions.move(logger, figure, workshopPosition)
         }
 
-        return DefaultActions.craft(logger, figure, craft.item, 1)
+        return when (val result = figure.craft(item, 1)) {
+            is CraftResult.CharacterIsBusy -> {
+                logger.info("${figure.name} is busy}")
+                Cooldown.NO_COOLDOWN
+            }
+
+            is CraftResult.CharacterIsInCooldown -> {
+                logger.info("${figure.name} is in cooldown")
+                Cooldown.NO_COOLDOWN
+            }
+
+            is CraftResult.CraftNotFound -> {
+                logger.info("${figure.name}: craft not found")
+                Cooldown.NO_COOLDOWN
+            }
+
+            is CraftResult.InventoryFull -> {
+                logger.info("inventory of ${figure.name} is full")
+                Cooldown.NO_COOLDOWN
+            }
+
+            is CraftResult.MissingRequiredItems -> {
+                logger.info("${figure.name} is missing items")
+                Cooldown.NO_COOLDOWN
+            }
+
+            is CraftResult.SkillLevelTooLow -> {
+                failed("crafting skill level of too low")
+            }
+
+            is CraftResult.NoWorkshopOnMap -> {
+                logger.info("${figure.name}: no workshop on map")
+                Cooldown.NO_COOLDOWN
+            }
+
+            is CraftResult.Success -> {
+                if (craft.item == item) {
+                    logger.info("${figure.name}: successfully crafted $item")
+                    itemCrafted = true
+                }
+                result.cooldown
+            }
+        }
     }
 
     private fun gatherOrFight(position: Position): Cooldown {
@@ -112,7 +158,7 @@ class Crafter(
         Skill.COOKING -> Position(1, 1)
         Skill.WOODCUTTING -> TODO("define position for $skill")
         Skill.MINING -> Position(1, 5)
-        Skill.ALCHEMY -> TODO("define position for $skill")
+        Skill.ALCHEMY -> Position(2, 3)
     }
 
     private fun positionOf(item: Item.Name): Position? {
