@@ -1,0 +1,6 @@
+services:
+  artifacts-client:
+    container_name: artifacts-client
+    build: .
+    environment:
+      API_TOKEN: ${API_TOKEN}
