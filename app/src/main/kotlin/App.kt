@@ -1,11 +1,16 @@
 import artifacts.adapter.artifactsmmo.ArtifactsGameCore
 import artifacts.adapter.cli.CliAdapter
+import artifacts.business.DefaultActions
 import artifacts.business.Game
-import artifacts.business.util.GameException
+import artifacts.business.common.Name
+import artifacts.business.common.Position
+import artifacts.business.util.Loggers
 import artifacts.business.util.Outcome
 import java.net.http.HttpClient
 
 class App
+
+val logger = Loggers.getLogger(App::class.java)
 
 fun main() {
 
@@ -16,12 +21,15 @@ fun main() {
     )
 
     when (core) {
-        is Outcome.Error -> throw GameException(core.value)
+        is Outcome.Error -> logger.error("could not create ArtifactsGameCore", core.value)
         is Outcome.Success -> {
             val game = Game(core.value)
             game.start()
 
-            CliAdapter(game).run()
+//            CliAdapter(game).run()
+            game.control(Name("Henk")) { figure ->
+                DefaultActions.move(logger, figure, Position(0, 0))
+            }
         }
     }
 }

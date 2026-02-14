@@ -7,7 +7,7 @@ class ExceptionHandler(private val game: Game) : Thread.UncaughtExceptionHandler
     override fun uncaughtException(t: Thread, e: Throwable) {
         when (e) {
             is GameException -> {
-                logger.error(e.error)
+                logger.error("uncaught exception", e.error)
             }
             else -> logger.error("${e::class.java}: ${e.message}")
         }
