@@ -20,9 +20,9 @@ class CliAdapter(private val game: Game) {
         return Name(readln())
     }
 
-    private fun readMonster(): Monster {
+    private fun readMob(): Mob.Name {
         print("name > ")
-        return Monster(readln())
+        return Mob.Name(readln())
     }
 
     private fun readPosition(): Position {
@@ -141,9 +141,9 @@ class CliAdapter(private val game: Game) {
                 }
 
                 "fighter" -> {
-                    val monster = readMonster()
+                    val mob = readMob()
                     game.autoControl(name) { core, figure ->
-                        Fighter(core, figure, monster)
+                        Fighter(core, figure, mob)
                     }
                 }
 

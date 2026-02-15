@@ -1,7 +1,7 @@
 package artifacts.business.common
 
 enum class ContentType(val type: String) {
-    MONSTER("monster"),
+    MOB("monster"),
     RESOURCE("resource"),
     WORKSHOP("workshop"),
     BANK("bank"),

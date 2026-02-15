@@ -32,6 +32,7 @@ class ArtifactsGameCore private constructor(
     private val craftInfos: MutableMap<Item.Name, CraftInfo> = mutableMapOf()
     private val maps: MutableMap<Position, MapDetails> = mutableMapOf()
     private val resources: MutableMap<Resource.Name, Resource.Details> = mutableMapOf()
+    private val monsters: MutableMap<Mob.Name, Mob.Details> = mutableMapOf()
 
     private fun updateCharacterData(data: CharacterSchema) {
         characters[Name(data.name)] = data.toFigureData(items)
@@ -323,6 +324,72 @@ class ArtifactsGameCore private constructor(
         }
     }
 
+    fun fetchMonsters(): Outcome<FetchMonstersResult, GameError> {
+        logger.info("load monsters")
+        var page = 1
+        var pages: Int?
+
+        do {
+            when (val result = getMonstersPage(page, MONSTERS_PAGE_SIZE)) {
+                is Outcome.Error -> {
+                    return Outcome.error(result.value)
+                }
+
+                is Outcome.Success -> when (result.value) {
+                    is Page -> {
+                        monsters.putAll(
+                            result.value.data.associate { monster ->
+                                Mob.Name(monster.code) to Mob.Details(
+                                    name = monster.code,
+                                    description = monster.name,
+                                    level = monster.level,
+                                    type = MobType.fromCode(monster.type),
+                                    hp = monster.hp,
+                                    drops = monster.drops.map { drop ->
+                                        Item.Name(drop.code)
+                                    }.toSet()
+                                )
+                            }
+                        )
+                        page = result.value.page + 1
+                        pages = result.value.pages
+                    }
+                }
+            }
+        } while (page != pages + 1)
+
+        logger.info("found ${monsters.size} monsters")
+        return Outcome.success(FetchMonstersResult())
+    }
+
+    private fun getMonstersPage(page: Int, pageSize: Int): Outcome<Page<MonsterSchema>, GameError> {
+        val request = HttpRequest
+            .newBuilder(URI("$artifactsApiUrl/monsters?page=$page&size=$pageSize"))
+            .configureHeaders()
+            .GET()
+            .build()
+
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        return when (response.statusCode()) {
+            200 -> {
+                val monstersResponse = json.decodeFromString<GetMonstersResponseDto>(response.body())
+
+                Outcome.success(
+                    Page(
+                        data = monstersResponse.data,
+                        total = monstersResponse.total,
+                        page = monstersResponse.page,
+                        pageSize = pageSize,
+                        pages = monstersResponse.pages
+                    )
+                )
+            }
+
+            else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
+        }
+    }
+
     override fun item(item: Item.Name): Item.Details = items[item]!!
 
     override fun resources(): Set<Resource.Details> = resources.values.toSet()
@@ -336,6 +403,10 @@ class ArtifactsGameCore private constructor(
     override fun map(position: Position): MapDetails = maps[position]!!
 
     override fun craftInfo(item: Item.Name): CraftInfo? = craftInfos[item]
+
+    override fun mobs(): Set<Mob.Details> = monsters.values.toSet()
+
+    override fun mob(mob: Mob.Name): Mob.Details = monsters[mob]!!
 
     override fun move(name: Name, position: Position): Outcome<MoveResult, GameError> {
         val request = HttpRequest
@@ -408,11 +479,11 @@ class ArtifactsGameCore private constructor(
             }
 
             422 -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
-            486 -> Outcome.success(FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters())
+            486 -> Outcome.success(FightResult.OnlyBossMobCanBeFoughtByMultipleCharacters())
             497 -> Outcome.success(FightResult.InventoryFull())
             498 -> Outcome.error(GameError.CharacterNotFound())
             499 -> Outcome.success(FightResult.CharacterIsInCooldown())
-            598 -> Outcome.success(FightResult.NoMonsterOnMap())
+            598 -> Outcome.success(FightResult.NoMobOnMap())
             else -> Outcome.error(GameError.Generic("HTTP${response.statusCode()} - ${response.body()}"))
         }
     }
@@ -746,6 +817,7 @@ class ArtifactsGameCore private constructor(
         private val ITEMS_PAGE_SIZE = 100
         private val RESOURCES_PAGE_SIZE = 100
         private val MAPS_PAGE_SIZE = 100
+        private val MONSTERS_PAGE_SIZE = 100
 
         fun create(
             httpClient: HttpClient,
@@ -769,6 +841,11 @@ class ArtifactsGameCore private constructor(
             }
 
             when (val result = core.fetchMaps()) {
+                is Outcome.Error -> return Outcome.error(result.value)
+                is Outcome.Success -> {}
+            }
+
+            when (val result = core.fetchMonsters()) {
                 is Outcome.Error -> return Outcome.error(result.value)
                 is Outcome.Success -> {}
             }

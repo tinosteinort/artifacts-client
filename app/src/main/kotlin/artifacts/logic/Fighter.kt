@@ -11,7 +11,7 @@ import artifacts.business.util.Loggers
 class Fighter(
     private val core: GameCore,
     private val figure: Figure,
-    private val monster: Monster,
+    private val mob: Mob.Name,
 ) : Behaviour {
 
     private var fightFailed: Boolean = false
@@ -21,13 +21,13 @@ class Fighter(
             return heal()
         }
 
-        findMonster(monster)
-            ?.let { positionOfMonster ->
-                if (positionOfMonster != figure.data().position) {
-                    return DefaultActions.move(logger, figure, positionOfMonster)
+        findMob(mob)
+            ?.let { positionOfMob ->
+                if (positionOfMob != figure.data().position) {
+                    return DefaultActions.move(logger, figure, positionOfMob)
                 }
             }
-            ?: return failed("monster $monster not found")
+            ?: return failed("mob $mob not found")
 
         return fight()
     }
@@ -52,12 +52,12 @@ class Fighter(
                 failed("inventory of ${figure.name} is full")
             }
 
-            is FightResult.NoMonsterOnMap -> {
-                failed("cannot fight, no monster on map")
+            is FightResult.NoMobOnMap -> {
+                failed("cannot fight, no mob on map")
             }
 
-            is FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters -> {
-                failed("only boss monster can be fought by multiple characters")
+            is FightResult.OnlyBossMobCanBeFoughtByMultipleCharacters -> {
+                failed("only boss mob can be fought by multiple characters")
             }
         }
 
@@ -75,10 +75,9 @@ class Fighter(
             is HealingMethod.WithoutItem -> DefaultActions.rest(logger, figure)
         }
 
-    private fun findMonster(monster: Monster): Position? =
+    private fun findMob(mob: Mob.Name): Position? =
         core.maps()
-            .filter { map -> map.content?.type == ContentType.MONSTER }
-            .firstOrNull { map -> map.content!!.code == monster.value }
+            .firstOrNull { map -> map.contains(mob) }
             ?.position
 
     private fun failed(message: String): Cooldown {

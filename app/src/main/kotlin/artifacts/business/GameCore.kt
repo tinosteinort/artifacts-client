@@ -13,6 +13,8 @@ interface GameCore {
     fun maps(): Set<MapDetails>
     fun map(position: Position): MapDetails
     fun craftInfo(item: Item.Name): CraftInfo?
+    fun mobs(): Set<Mob.Details>
+    fun mob(mob: Mob.Name): Mob.Details
 
     fun move(name: Name, position: Position): Outcome<MoveResult, GameError>
     fun fight(name: Name): Outcome<FightResult, GameError>

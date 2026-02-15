@@ -9,8 +9,8 @@ sealed class FightResult {
         val opponent: String,
         val cooldown: Cooldown,
     ) : FightResult()
-    class OnlyBossMonsterCanBeFoughtByMultipleCharacters : FightResult()
+    class OnlyBossMobCanBeFoughtByMultipleCharacters : FightResult()
     class InventoryFull : FightResult()
     class CharacterIsInCooldown : FightResult()
-    class NoMonsterOnMap : FightResult()
+    class NoMobOnMap : FightResult()
 }

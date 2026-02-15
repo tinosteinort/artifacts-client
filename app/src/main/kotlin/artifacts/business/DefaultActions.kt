@@ -60,13 +60,13 @@ object DefaultActions {
                 Cooldown.NO_COOLDOWN
             }
 
-            is FightResult.NoMonsterOnMap -> {
-                logger.info("${figure.name} cannot fight, no monster on map")
+            is FightResult.NoMobOnMap -> {
+                logger.info("${figure.name} cannot fight, no mob on map")
                 Cooldown.NO_COOLDOWN
             }
 
-            is FightResult.OnlyBossMonsterCanBeFoughtByMultipleCharacters -> {
-                logger.info("${figure.name}: only boss monster can be fought by multiple characters")
+            is FightResult.OnlyBossMobCanBeFoughtByMultipleCharacters -> {
+                logger.info("${figure.name}: only boss mob can be fought by multiple characters")
                 Cooldown.NO_COOLDOWN
             }
         }

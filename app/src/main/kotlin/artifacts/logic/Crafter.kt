@@ -120,7 +120,7 @@ class Crafter(
 
         val map = core.map(position)
         return when (map.content?.type) {
-            ContentType.MONSTER -> DefaultActions.fight(logger, figure)
+            ContentType.MOB -> DefaultActions.fight(logger, figure)
             ContentType.RESOURCE -> DefaultActions.gather(logger, figure)
             else -> {
                 failed("nothing to fight or to gather")
@@ -164,7 +164,7 @@ class Crafter(
         if (resource == null) {
             logger.info("${figure.name}: no resource found that drops $item")
 
-            // TODO find monster that drops item
+            // TODO find mob that drops item
             return null
         }
 

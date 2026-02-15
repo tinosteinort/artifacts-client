@@ -5,4 +5,8 @@ data class MapDetails(
     val name: String,
     val skin: String,
     val content: MapContent?,
-)
+) {
+    fun contains(mob: Mob.Name): Boolean =
+        content?.type == ContentType.MOB
+                && content.code == mob.name
+}
