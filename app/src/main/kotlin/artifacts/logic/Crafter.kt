@@ -18,10 +18,7 @@ class Crafter(
     private var itemCrafted: Boolean = false
 
     override fun control(): Cooldown {
-        if (errorOccurred) {
-            return Cooldown.NO_COOLDOWN
-        }
-        if (itemCrafted) {
+        if (errorOccurred || itemCrafted) {
             return Cooldown.NO_COOLDOWN
         }
 
@@ -98,7 +95,7 @@ class Crafter(
             }
 
             is CraftResult.SkillLevelTooLow -> {
-                failed("crafting skill level of too low")
+                failed("crafting skill level is too low")
             }
 
             is CraftResult.NoWorkshopOnMap -> {
